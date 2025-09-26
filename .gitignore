@@ -1,0 +1,11 @@
+data/
+.env
+
+# Python Junk
+.venv/
+__pycache__/
+
+# IDE Garbage
+.code/
+.vscode/
+.idea/
