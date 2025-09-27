@@ -16,19 +16,25 @@ def convert_to_csv(file_path: str):
 
     csv_name = file_path.split(".")[0] + ".csv"
     with open(csv_name, mode="w") as csv:
-        csv.write(header)
+        csv.write(f"{header}\n")
 
         current_game = chess.pgn.read_game(pgn)
+
         while current_game is not None:
+            # get game info
             elo = (current_game.headers["WhiteElo"], current_game.headers["BlackElo"])
             board = current_game.board()
             is_black = False
+
+            # loop through moves and save board states to csv
             for move in current_game.mainline_moves():
                 board.push(move)
                 row = convert_board_to_row(board.fen(), elo, is_black)
 
                 csv.write(row)
                 is_black = not is_black  # toggle every move
+
+            current_game = chess.pgn.read_game(pgn)
 
 
 def convert_board_to_row(fen: str, elo: tuple, is_black: bool) -> str:
