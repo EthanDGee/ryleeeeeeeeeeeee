@@ -4,43 +4,70 @@ import sys
 import os
 import zstandard as zstd
 import io
-from typing import TextIO, Tuple, Optional
+from typing import TextIO, Optional
+from pydantic import BaseModel, field_validator
 
 
-def convert_pgn_to_csv(source_path: str, destination_path: str, verbose: bool = False) -> None:
+class PGNToCSVConfig(BaseModel):
+    source_path: str
+    destination_path: str
+    verbose: bool = False
+
+    @field_validator("source_path")
+    def validate_source_path(cls, v: str) -> str:
+        if not os.path.exists(v):
+            raise ValueError(f"Source file not found: {v}")
+        return v
+
+    @field_validator("destination_path")
+    def validate_destination_path(cls, v: str) -> str:
+        if not v.endswith(".csv"):
+            raise ValueError("Destination path must end with .csv")
+        return v
+
+
+class GameMetadata(BaseModel):
+    white_elo: str
+    black_elo: str
+    is_black: bool
+
+
+class BoardState(BaseModel):
+    board: list[int]  # Board is a list of integers representing the piece positions
+    move: str
+
+
+def convert_pgn_to_csv(config: PGNToCSVConfig) -> None:
     """
     Converts a PGN file (optionally compressed with Zstandard) to a CSV file representing
     board states and moves.
 
     Args:
-        source_path (str): Path to the source PGN file (.pgn or .pgn.zst).
-        destination_path (str): Path where the output CSV file will be saved.
-        verbose (bool): If True, print detailed processing information.
+        config (PGNToCSVConfig): Configuration object with source, destination paths, and verbose flag.
     """
-    if verbose:
-        print(f"[INFO] Reading PGN from: {source_path}")
-        print(f"[INFO] Writing CSV to: {destination_path}")
+    if config.verbose:
+        print(f"[INFO] Reading PGN from: {config.source_path}")
+        print(f"[INFO] Writing CSV to: {config.destination_path}")
 
-    if source_path.endswith(".zst"):
-        with open(source_path, 'rb') as compressed:
+    if config.source_path.endswith(".zst"):
+        with open(config.source_path, 'rb') as compressed:
             dctx = zstd.ZstdDecompressor()
             stream_reader = dctx.stream_reader(compressed)
             text_stream = io.TextIOWrapper(stream_reader, encoding='utf-8')
 
-            _process_pgn_stream(text_stream, destination_path, verbose)
+            _process_pgn_stream(text_stream, config)
     else:
-        with open(source_path, "r", encoding="utf-8") as pgn_file:
-            _process_pgn_stream(pgn_file, destination_path, verbose)
+        with open(config.source_path, "r", encoding="utf-8") as pgn_file:
+            _process_pgn_stream(pgn_file, config)
 
 
-def _process_pgn_stream(pgn_stream: TextIO, destination_path: str, verbose: bool = False) -> None:
+def _process_pgn_stream(pgn_stream: TextIO, config: PGNToCSVConfig) -> None:
     """
     Processes a text stream containing PGN data and writes parsed game states to CSV.
 
     Args:
         pgn_stream (TextIO): A text stream of PGN data (could be from decompressed .zst or plain .pgn).
-        destination_path (str): Output CSV file path.
-        verbose (bool): If True, print detailed processing information.
+        config (PGNToCSVConfig): Configuration object with destination path and verbose flag.
     """
     header = "white_elo,black_elo,blacks_move,"
     for letter in "ABCDEFGH":
@@ -48,7 +75,7 @@ def _process_pgn_stream(pgn_stream: TextIO, destination_path: str, verbose: bool
             header += f"{letter}{num},"
     header += "selected_move\n"
 
-    with open(destination_path, "w", encoding="utf-8") as csv_file:
+    with open(config.destination_path, "w", encoding="utf-8") as csv_file:
         csv_file.write(header)
 
         game_counter = 0
@@ -56,7 +83,7 @@ def _process_pgn_stream(pgn_stream: TextIO, destination_path: str, verbose: bool
         while pgn is not None:
             game_counter += 1
 
-            if verbose and game_counter % 100 == 0:
+            if config.verbose and game_counter % 100 == 0:
                 print(f"[INFO] Processing game #{game_counter}")
 
             white_elo = pgn.headers.get("WhiteElo", "0")
@@ -65,25 +92,24 @@ def _process_pgn_stream(pgn_stream: TextIO, destination_path: str, verbose: bool
             is_black = False
 
             for move in pgn.mainline_moves():
-                row = _convert_board_to_row(board.fen(), (white_elo, black_elo), is_black, move.uci())
+                row = _convert_board_to_row(board.fen(), GameMetadata(white_elo=white_elo, black_elo=black_elo, is_black=is_black), move.uci())
                 csv_file.write(row)
                 board.push(move)
                 is_black = not is_black
 
             pgn = chess.pgn.read_game(pgn_stream)
 
-        if verbose:
+        if config.verbose:
             print(f"[DONE] Processed {game_counter} games.")
 
 
-def _convert_board_to_row(fen: str, elo: Tuple[str, str], is_black: bool, move: str) -> str:
+def _convert_board_to_row(fen: str, metadata: GameMetadata, move: str) -> str:
     """
     Converts a FEN string and game metadata into a CSV row string.
 
     Args:
         fen (str): Forsyth-Edwards Notation string representing the board state.
-        elo (Tuple[str, str]): Tuple of white and black player ELO ratings as strings.
-        is_black (bool): True if the current move is made by Black, False otherwise.
+        metadata (GameMetadata): Metadata object containing player ratings and move info.
         move (str): The move in UCI notation.
 
     Returns:
@@ -104,10 +130,10 @@ def _convert_board_to_row(fen: str, elo: Tuple[str, str], is_black: bool, move: 
         else:
             board.append(piece_map.get(char, 0))
 
-    return f"{elo[0]},{elo[1]},{int(is_black)},{','.join(map(str, board))},{move}\n"
+    return f"{metadata.white_elo},{metadata.black_elo},{int(metadata.is_black)},{','.join(map(str, board))},{move}\n"
 
 
-if __name__ == "__main__":
+def main():
     if len(sys.argv) < 3 or len(sys.argv) > 4:
         print("Usage: python src/pgn_to_csv.py <source_pgn_path> <destination_csv_path> [--verbose]")
         sys.exit(1)
@@ -116,8 +142,9 @@ if __name__ == "__main__":
     destination: str = sys.argv[2]
     verbose_flag: bool = len(sys.argv) == 4 and sys.argv[3] == "--verbose"
 
-    if not os.path.exists(source):
-        print(f"[ERROR] Source file not found: {source}")
-        sys.exit(1)
+    config = PGNToCSVConfig(source_path=source, destination_path=destination, verbose=verbose_flag)
+    convert_pgn_to_csv(config)
 
-    convert_pgn_to_csv(source, destination, verbose_flag)
+
+if __name__ == "__main__":
+    main()
