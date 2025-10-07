@@ -1,9 +1,0 @@
-[Event "Friendly Match"]
-[Site "?"]
-[Date "2025.10.07"]
-[Round "?"]
-[White "Leela"]
-[Black "Stockfish"]
-[Result "1-0"]
-
-1. d4 e6 2. e4 a6 3. Be3 Nf6 4. Bd3 h6 5. Nc3 d6 6. f4 Nc6 7. Nf3 e5 8. Qe2 exf4 9. Bxf4 Nb4 10. Bc4 Be7 11. a3 Nc6 12. O-O-O Nh7 13. Kb1 b5 14. Bd5 Bd7 15. e5 O-O 16. Qe4 dxe5 17. dxe5 Qe8 18. h4 Kh8 19. Ng5 f5 20. Qf3 hxg5 21. hxg5 Qg6 22. e6 Bxe6 23. Bxe6 Na5 24. Nd5 Rae8 25. Bd7 Nc4 26. Bxe8 Qb6 27. Rxh7+ Kxh7 28. Qh5+ Qh6 29. gxh6 Rf6 30. hxg7+ Kxg7 31. Nxf6 Bxf6 32. Qf7+ Kh8 33. Rh1+ Bh4 34. Rxh4# 1-0

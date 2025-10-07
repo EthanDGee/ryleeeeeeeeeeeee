@@ -114,7 +114,7 @@ if __name__ == "__main__":
 
     source: str = sys.argv[1]
     destination: str = sys.argv[2]
-    verbose_flag = len(sys.argv) == 4 and sys.argv[3] == "--verbose"
+    verbose_flag: bool = len(sys.argv) == 4 and sys.argv[3] == "--verbose"
 
     if not os.path.exists(source):
         print(f"[ERROR] Source file not found: {source}")
