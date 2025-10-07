@@ -50,7 +50,7 @@ class Cli(Ui):
         """Prompt human player for a legal move."""
         legal_moves = list(self.game.board.legal_moves)
         while True:
-            move_str = input(f"{player.name}'s move (UCI, e.g., e2e4): ").strip()
+            move_str = input(f"{player.config.name}'s move (UCI, e.g., e2e4): ").strip()
             try:
                 move = chess.Move.from_uci(move_str)
                 if move in legal_moves:

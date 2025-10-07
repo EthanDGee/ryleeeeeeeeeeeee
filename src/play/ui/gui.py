@@ -29,7 +29,6 @@ COLOR_HIGHLIGHT_CAPTURE_SQUARE = "#FFD700"
 PIECE_CODES = { 'P': 'wp', 'R': 'wr', 'N': 'wn', 'B': 'wb', 'Q': 'wq', 'K': 'wk', 'p': 'bp', 'r': 'br', 'n': 'bn', 'b': 'bb', 'q': 'bq', 'k': 'bk', }
 
 
-# ================= Configuration with Pydantic =================
 class GuiConfig(BaseModel):
     window_width: int = 1300
     window_height: int = 1000
@@ -43,7 +42,6 @@ class GuiConfig(BaseModel):
     base_url: str = "https://images.chesscomfiles.com/chess-themes/pieces/neo/150/"
 
 
-# ================= GUI CLASS =================
 class Gui(Ui):
     def __init__(self, game: Game, config: GuiConfig = GuiConfig()) -> None:
         super().__init__(game)
@@ -127,7 +125,7 @@ class Gui(Ui):
         black_frame: tk.Frame = tk.Frame(self.sidebar, bg="#EEE")
         black_frame.pack(pady=(0, 10))
         tk.Label(black_frame, text="Black:", font=("Arial", 12, "bold"), bg="#EEE").pack(side="left")
-        self.black_name_label: tk.Label = tk.Label(black_frame, text=self.game.black_player.name,
+        self.black_name_label: tk.Label = tk.Label(black_frame, text=self.game.black_player.config.name,
                                                    font=("Arial", 12, "bold"), bg="#EEE")
         self.black_name_label.pack(side="left", padx=(5, 10))
         self.black_score_label: tk.Label = tk.Label(black_frame, text="Score: 0", font=("Arial", 10), bg="#EEE")
@@ -138,7 +136,7 @@ class Gui(Ui):
         white_frame: tk.Frame = tk.Frame(self.sidebar, bg="#EEE")
         white_frame.pack(pady=(0, 10))
         tk.Label(white_frame, text="White:", font=("Arial", 12, "bold"), bg="#EEE").pack(side="left")
-        self.white_name_label: tk.Label = tk.Label(white_frame, text=self.game.white_player.name,
+        self.white_name_label: tk.Label = tk.Label(white_frame, text=self.game.white_player.config.name,
                                                    font=("Arial", 12, "bold"), bg="#EEE")
         self.white_name_label.pack(side="left", padx=(5, 10))
         self.white_score_label: tk.Label = tk.Label(white_frame, text="Score: 0", font=("Arial", 10), bg="#EEE")
@@ -352,7 +350,7 @@ class Gui(Ui):
             self.turn_label.config(text="")
         else:
             color_text = "White" if self.board.turn else "Black"
-            player_name = self.game.white_player.name if self.board.turn else self.game.black_player.name
+            player_name = self.game.white_player.config.name if self.board.turn else self.game.black_player.config.name
             self.turn_label.config(text=f"{color_text}'s turn — {player_name}")
 
     def _game_loop(self) -> None:

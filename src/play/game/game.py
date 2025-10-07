@@ -3,23 +3,32 @@ import os
 import chess
 import chess.pgn
 import time
+from pydantic import BaseModel, Field
+
+
+class GameConfig(BaseModel):
+    save_dir: str = Field(default="games", title="Save Directory")
+    time_limit: float = Field(default=600.0, ge=0, title="Time Limit (in seconds)")
+
 
 class Game:
-    def __init__(self, white_player, black_player, save_dir="games", ui=None, time_limit=600):
+    def __init__(self, white_player, black_player, config: GameConfig, ui=None):
         self.board = chess.Board()
         self.white_player = white_player
         self.black_player = black_player
         self.current_player = self.white_player if self.board.turn else self.black_player
         self.last_move = None
         self.capture_square = None
-        self.save_dir = save_dir
-        self.ui = ui
+        self.config = config  # Configuration passed from GameConfig
 
         # Timer in seconds
-        self.time_limit = time_limit
-        self.white_time_left = time_limit
-        self.black_time_left = time_limit
+        self.time_limit = self.config.time_limit
+        self.white_time_left = self.time_limit
+        self.black_time_left = self.time_limit
         self._last_time_update = time.time()
+
+        self.ui = ui
+        self.save_dir = self.config.save_dir
 
     def update_timer(self):
         """
@@ -95,8 +104,8 @@ class Game:
         os.makedirs(self.save_dir, exist_ok=True)
         game_pgn = chess.pgn.Game()
         game_pgn.headers["Event"] = "Friendly Match"
-        game_pgn.headers["White"] = self.white_player.name
-        game_pgn.headers["Black"] = self.black_player.name
+        game_pgn.headers["White"] = self.white_player.config.name
+        game_pgn.headers["Black"] = self.black_player.config.name
         game_pgn.headers["Date"] = datetime.datetime.now().strftime("%Y.%m.%d")
         game_pgn.headers["Result"] = self.result()
 
@@ -106,7 +115,7 @@ class Game:
 
         filename = os.path.join(
             self.save_dir,
-            f"{self.white_player.name}_vs_{self.black_player.name}_{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.pgn"
+            f"{self.white_player.config.name}_vs_{self.black_player.config.name}_{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.pgn"
         )
         with open(filename, "w", encoding="utf-8") as f:
             print(game_pgn, file=f)

@@ -1,8 +1,10 @@
 import shutil
 import chess
 import chess.engine
+from typing import Optional
 
-from src.play.player.player import Player
+from src.play.player.player import Player, PlayerConfig
+
 
 # ================================================================
 # Lc0BotPlayer
@@ -35,11 +37,24 @@ from src.play.player.player import Player
 #    - Import Lc0BotPlayer and pass it to your game framework.
 #    - Optionally, set time_limit to control thinking time per move.
 
+
+class Lc0BotPlayerConfig(PlayerConfig):
+    name: str = "Lc0"
+    color: bool = True  # True for white, False for black
+    time_limit: float = 1.0  # Time per move in seconds
+
+
 class Lc0BotPlayer(Player):
-    def __init__(self, name="Lc0", color=True, time_limit=1.0):
-        super().__init__(name, color)
-        self.pending_move = None
-        self.time_limit = time_limit
+    def __init__(self, config: Lc0BotPlayerConfig) -> None:
+        """
+        Initialize the LCZero chess bot using the LCZero engine.
+
+        Args:
+            config: Configuration parameters for the LCZero bot.
+        """
+        super().__init__(config)
+        self.time_limit = config.time_limit
+        self.pending_move: Optional[chess.Move] = None
 
         # Locate lc0 binary
         self.engine_path = shutil.which("lc0")
@@ -49,12 +64,12 @@ class Lc0BotPlayer(Player):
             )
 
         # Start LCZero engine
-        # Make sure your network is in ~/.local/share/lc0/networks/
         self.engine = chess.engine.SimpleEngine.popen_uci([self.engine_path])
 
-    def get_move(self, board: chess.Board):
+    def get_move(self, board: chess.Board) -> Optional[chess.Move]:
+        """Generate a move using LCZero engine based on the current board state."""
         # Only make a move if it's this player's turn
-        if board.turn != self.color:
+        if board.turn != self.config.color:
             return None
         try:
             result = self.engine.play(board, chess.engine.Limit(time=self.time_limit))
@@ -63,12 +78,13 @@ class Lc0BotPlayer(Player):
             print("Lc0 error:", e)
             return None
 
-    def close(self):
-        # Safely terminate engine
+    def close(self) -> None:
+        """Safely terminate the LCZero engine."""
         try:
             self.engine.quit()
-        except Exception:
+        except:
             pass
 
-    def __del__(self):
+    def __del__(self) -> None:
+        """Destructor to ensure the engine is closed when the player is deleted."""
         self.close()
