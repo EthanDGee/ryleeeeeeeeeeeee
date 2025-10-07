@@ -1,3 +1,4 @@
+pillow
 # Chess PGN parsing and board utilities
 chess==1.11.2
 

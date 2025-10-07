@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Fetch all updates from the upstream repository
 git fetch --all
