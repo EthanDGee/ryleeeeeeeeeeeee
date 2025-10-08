@@ -82,3 +82,8 @@ class Database:
                 data = line.split(",")
                 self._save_state(data)
                 line = file.readline()
+
+
+    def state_count(self) -> int:
+        with sqlite3.connect(self.db_name) as conn:
+            return conn.execute("SELECT COUNT(*) FROM state").fetchone()[0]
