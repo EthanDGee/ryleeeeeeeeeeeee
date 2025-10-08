@@ -1,6 +1,5 @@
 import sqlite3
 from typing import List
-import pandas as pd
 
 
 class Database:
@@ -24,12 +23,13 @@ class Database:
         ]
         self.TARGET_COLUMN: str = "selected_move"
 
-    def _ensure_table_exist(self) -> None:
-        def _append_columns(headers : List[str], data_type: str) -> str:
+        self._ensure_table_exist()
 
+    def _ensure_table_exist(self) -> None:
+        def _append_columns(headers: List[str], data_type: str) -> str:
             new_columns = ""
             for header in headers:
-                new_columns += f"{header} {data_type},"
+                new_columns += f"{header} {data_type}, "
 
             return new_columns
 
@@ -37,15 +37,48 @@ class Database:
         with sqlite3.connect(self.db_name) as conn:
             cur = conn.cursor()
 
-            query = "CREATE TABLE IF NOT EXISTS games ("
+            query = "CREATE TABLE IF NOT EXISTS state ("
 
             # add the various labels
             query += _append_columns(self.INTEGER_LABELS, "INTEGER")
             query += _append_columns(self.BOOLEAN_LABELS, "INTEGER")
-            query += _append_columns(self.CLASS_LABELS, "INTEGER") # classes are stored as indexes
+            query += _append_columns(self.CLASS_LABELS, "INTEGER")  # classes are stored as indexes
 
             # add the target class
             query += f"{self.TARGET_COLUMN} TEXT)"
             cur.execute(query)
             conn.commit()
 
+    def _save_state(self, state_data: List) -> None:
+
+        # try and convert all labels to ints if any fail ignore given state and print warning
+        labels = state_data[:-1]
+        for i in range(len(labels)):
+            try:
+                labels[i] = int(labels[i])
+            except ValueError:
+                print(f"Warning: Could not convert label {i} - {labels[i]} to int. Ignoring state.")
+
+        # format for SQL insert statement
+        processed_data = ""
+        for label in labels:
+            processed_data += f"{label}, "
+
+        # add target value
+
+        processed_data += f"'{state_data[-1]}'"
+
+        with sqlite3.connect(self.db_name) as conn:
+            cur = conn.cursor()
+            cur.execute(f"INSERT INTO state VALUES ({processed_data})")
+            conn.commit()
+
+    def import_csv(self, csv_path: str) -> None:
+        """Import a CSV file into the database"""
+        with open(csv_path, "r") as file:
+            file.readline()  # skip the header line
+            line = file.readline()
+            while line:
+                data = line.split(",")
+                self._save_state(data)
+                line = file.readline()
