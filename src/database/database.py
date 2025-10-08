@@ -1,5 +1,6 @@
 import sqlite3
 from typing import List
+from torch import Tensor
 
 
 class Database:
@@ -26,6 +27,22 @@ class Database:
         self._ensure_table_exist()
 
     def _ensure_table_exist(self) -> None:
+        """
+        Ensures the state table exists in the database.
+
+        Attributes:
+            db_name: The name of the SQLite database file.
+            INTEGER_LABELS: List of column headers for integer-type data.
+            BOOLEAN_LABELS: List of column headers for boolean-type data
+                           (represented as integers).
+            CLASS_LABELS: List of column headers for class data (stored as indexes).
+            TARGET_COLUMN: The column header for the target class.
+
+        Raises:
+            OperationalError: Raised if an issue occurs during database operations.
+
+        """
+
         def _append_columns(headers: List[str], data_type: str) -> str:
             new_columns = ""
             for header in headers:
@@ -50,7 +67,22 @@ class Database:
             conn.commit()
 
     def _save_state(self, state_data: List) -> None:
+        """
+        Saves the given state data to the database by formatting and inserting it
+        into the 'state' SQL table. Converts all labels from the list into integers
+        or skips processing if conversion fails for any label. This assumes that the
+        ordering of the labels in the list is the same as the ordering of the columns.
 
+        Attributes:
+            db_name: The name of the database to which the state data is saved.
+
+        Args:
+            state_data (List): A list where all elements are the data for a single
+            state in the order they would appear in the columns.
+
+        Raises:
+            ValueError: Raised internally when a label cannot be converted to an integer.
+        """
         # try and convert all labels to ints if any fail ignore given state and print warning
         labels = state_data[:-1]
         for i in range(len(labels)):
@@ -74,7 +106,21 @@ class Database:
             conn.commit()
 
     def import_csv(self, csv_path: str) -> None:
-        """Import a CSV file into the database"""
+        """
+        Imports data from a CSV file by processing each line and saves it using
+        the internal storage mechanism. The method reads the file line-by-line
+        to extract and process the data.
+
+        Parameters:
+        csv_path: str
+            The file path of the CSV file to be imported.
+
+        Raises:
+        FileNotFoundError
+            If the specified file does not exist.
+        PermissionError
+            If the file cannot be accessed due to insufficient permissions.
+        """
         with open(csv_path, "r") as file:
             file.readline()  # skip the header line
             line = file.readline()
@@ -83,7 +129,9 @@ class Database:
                 self._save_state(data)
                 line = file.readline()
 
-
     def state_count(self) -> int:
         with sqlite3.connect(self.db_name) as conn:
             return conn.execute("SELECT COUNT(*) FROM state").fetchone()[0]
+
+    def get_item(self, index: int) -> Tensor:
+        pass
