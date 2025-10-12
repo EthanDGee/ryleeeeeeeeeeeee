@@ -14,5 +14,6 @@ __pycache__/
 images/
 games/
 *.sqlite3
-*.sqlite3-journal
+*.sqlite3-*
 !src/train/data
+*.tmp

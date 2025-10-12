@@ -1,5 +1,5 @@
 import sqlite3
-from typing import List
+from typing import Iterable, Iterator
 
 from src.train.data.database.config import DB_FILE, is_database_initialized
 from src.train.data.models.file_metadata import FileMetadata
@@ -16,7 +16,8 @@ def create_files_metadata_table():
             url TEXT UNIQUE,
             filename TEXT,
             games INTEGER,
-            size_gb REAL
+            size_gb REAL,
+            processed INTEGER DEFAULT 0
         )
         """)
         conn.commit()
@@ -53,63 +54,64 @@ def save_file_metadata(file: FileMetadata) -> None:
 
         cursor.execute(
             f"""
-            INSERT INTO {_TABLE_NAME} (url, filename, games, size_gb)
-            VALUES (?, ?, ?, ?)
+            INSERT INTO {_TABLE_NAME} (url, filename, games, size_gb, processed)
+            VALUES (?, ?, ?, ?, ?)
             """,
-            (file.url, file.filename, file.games, file.size_gb),
+            (file.url, file.filename, file.games, file.size_gb, int(file.processed)),
         )
         file.id = cursor.lastrowid  # assign new id
         conn.commit()
 
 
-def save_files_metadata(files: List[FileMetadata]) -> None:
+def save_files_metadata(files: Iterable[FileMetadata]) -> None:
     """
-    Save a list of FileMetadata objects into the database.
+    Save an iterable of FileMetadata objects into the database.
     Calls `save_file_metadata` for each file.
     """
     for file in files:
         save_file_metadata(file)
 
 
-def fetch_all_files_metadata() -> List[FileMetadata]:
-    """
-    Retrieve all entries from the files_metadata table as FileMetadata objects.
-    """
-    with sqlite3.connect(DB_FILE) as conn:
-        cursor = conn.cursor()
-        cursor.execute(f"SELECT id, url, filename, games, size_gb FROM {_TABLE_NAME}")
-        rows = cursor.fetchall()
-
-    return [
-        _row_to_file_metadata(row)
-        for row in rows
-    ]
-
-
-def fetch_files_metadata_under_size(max_gb: float) -> List[FileMetadata]:
-    """
-    Retrieve all entries from the files_metadata table with size less than max_gb.
-    """
+def mark_file_as_processed(file: FileMetadata) -> None:
     with sqlite3.connect(DB_FILE) as conn:
         cursor = conn.cursor()
         cursor.execute(
-            f"SELECT id, url, filename, games, size_gb FROM {_TABLE_NAME} WHERE size_gb < ?",
+            f"UPDATE {_TABLE_NAME} SET processed = 1 WHERE url = ?",
+            (file.url,)
+        )
+        file.processed = True
+        conn.commit()
+
+
+def fetch_all_files_metadata() -> Iterator[FileMetadata]:
+    """Yield all FileMetadata objects in the database."""
+    with sqlite3.connect(DB_FILE) as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            f"SELECT id, url, filename, games, size_gb, processed FROM {_TABLE_NAME}"
+        )
+        for row in cursor:
+            yield _row_to_file_metadata(row)
+
+
+def fetch_files_metadata_under_size(max_gb: float) -> Iterator[FileMetadata]:
+    """Yield FileMetadata objects with size less than max_gb."""
+    with sqlite3.connect(DB_FILE) as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            f"SELECT id, url, filename, games, size_gb, processed FROM {_TABLE_NAME} WHERE size_gb < ?",
             (max_gb,),
         )
-        rows = cursor.fetchall()
-
-    return [
-        _row_to_file_metadata(row)
-        for row in rows
-    ]
-
+        for row in cursor:
+            yield _row_to_file_metadata(row)
 
 
 def _row_to_file_metadata(row: tuple) -> FileMetadata:
     return FileMetadata(
-            id=row[0],
-            url=row[1],
-            filename=row[2],
-            games=row[3],
-            size_gb=row[4]
-        )
+        id=row[0],
+        url=row[1],
+        filename=row[2],
+        games=row[3],
+        size_gb=row[4],
+        processed=bool(row[5])  # Convert 0/1 to boolean
+    )

@@ -8,3 +8,4 @@ class FileMetadata:
     games: int
     size_gb: float
     id: Optional[int] = None  # DB primary key
+    processed: bool = False   # New field

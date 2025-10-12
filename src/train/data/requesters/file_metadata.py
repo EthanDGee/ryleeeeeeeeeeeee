@@ -1,7 +1,7 @@
 import re
 import requests
 from urllib.parse import urljoin
-from typing import List
+from typing import Iterator
 
 from src.train.data.models.file_metadata import FileMetadata
 
@@ -9,12 +9,12 @@ _BASE_URL = "https://database.lichess.org/standard/"
 _COUNTS_URL = urljoin(_BASE_URL, "counts.txt")
 
 
-def fetch_files_metadata() -> List[FileMetadata]:
+def fetch_files_metadata() -> Iterator[FileMetadata]:
     """
     Fetch metadata about all standard Lichess files.
 
-    Returns:
-        List[FileMetadata]: A list of metadata objects for each .pgn.zst file.
+    Yields:
+        FileMetadata: Metadata for each .pgn.zst file.
     """
     # --- Fetch counts.txt to get game counts ---
     counts_resp = requests.get(_COUNTS_URL)
@@ -34,7 +34,6 @@ def fetch_files_metadata() -> List[FileMetadata]:
 
     # --- Extract .pgn.zst files ---
     file_names = re.findall(r'href="(lichess_db_standard_rated_[^"]+\.pgn\.zst)"', html)
-    metadata_list: List[FileMetadata] = []
 
     for filename in file_names:
         file_url = urljoin(_BASE_URL, filename)
@@ -43,19 +42,18 @@ def fetch_files_metadata() -> List[FileMetadata]:
         head_resp = requests.head(file_url)
         size_gb = int(head_resp.headers.get("Content-Length", 0)) / (1024 ** 3)
 
-        metadata_list.append(
-            FileMetadata(
-                url=file_url,
-                filename=filename,
-                games=counts.get(filename, 0),
-                size_gb=round(size_gb, 2),
-            )
+        yield FileMetadata(
+            url=file_url,
+            filename=filename,
+            games=counts.get(filename, 0),
+            size_gb=round(size_gb, 2),
         )
 
-    return metadata_list
 
 if __name__ == "__main__":
-    files_metadata = fetch_files_metadata()
-    print(f"Found {len(files_metadata)} standard files.\n")
-    for file in files_metadata[:10]:  # just print first 10 for preview
+    files_metadata_iter = fetch_files_metadata()
+    files_preview = list(next(files_metadata_iter) for _ in range(10))  # preview first 10
+
+    print(f"Found at least 10 standard files.\n")
+    for file in files_preview:
         print(file)
