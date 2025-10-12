@@ -1,17 +1,15 @@
-from src.train.data.database.config import is_database_initialized
-from src.train.data.database.database import initialize_database
-from src.train.data.database.files_metadata import save_files_metadata, fetch_files_metadata_under_size, files_metadata_exist
-from src.train.data.requesters.file_metadata import fetch_files_metadata, FileMetadata
 from typing import List
 
+from src.train.data.database.database import initialize_database
+from src.train.data.database.files_metadata import save_files_metadata, files_metadata_exist
+from src.train.data.database.games import save_games
+from src.train.data.models.game import Game
+from src.train.data.requesters.file_metadata import fetch_files_metadata, FileMetadata
+from src.train.data.requesters.games import fetch_new_games
+
+
 def main() -> None:
-    # --- Initialize database if needed ---
-    if not is_database_initialized():
-        print("Initializing database...")
-        initialize_database()
-        print("Database initialized.\n")
-    else:
-        print("Database already initialized.\n")
+    initialize_database()
 
     # --- Fetch metadata if needed ---
     if not files_metadata_exist():
@@ -25,12 +23,9 @@ def main() -> None:
     else:
         print("Files metadata already exists in the database.\n")
 
-    # Example usage: get all files under 1 GB
-    max_size_gb = 1.0
-    small_files = fetch_files_metadata_under_size(max_size_gb)
-    print(f"Files under {max_size_gb} GB: {len(small_files)}")
-    for file in small_files[:10]:
-        print(f"{file.filename} ({file.size_gb} GB)")
+    games: List[Game] = fetch_new_games(max_files=10, max_size_gb=1)
+
+    save_games(games)
 
     print("\nDone!")
 
