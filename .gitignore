@@ -13,3 +13,5 @@ __pycache__/
 *.lock
 images/
 games/
+*.sqlite3
+!src/train/data
