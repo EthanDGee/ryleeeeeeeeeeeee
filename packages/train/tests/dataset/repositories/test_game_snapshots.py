@@ -70,8 +70,6 @@ class TestGameSnapshotsTable:
                 move="e4",
                 fen=fen,
                 board_hash="hash1",
-                white_player="P1",
-                black_player="P2",
                 white_elo=1500,
                 black_elo=1500,
                 result="1-0",
@@ -99,8 +97,6 @@ class TestGameSnapshotsTable:
                 move="e4",
                 fen=fen,
                 board_hash="hash1",
-                white_player="P1",
-                black_player="P2",
                 white_elo=1500,
                 black_elo=1500,
                 result="1-0",
@@ -112,8 +108,6 @@ class TestGameSnapshotsTable:
                 move="e4",
                 fen=fen,
                 board_hash="hash1",
-                white_player="P1",
-                black_player="P2",
                 white_elo=1500,
                 black_elo=1500,
                 result="1-0",
@@ -142,8 +136,6 @@ class TestGameSnapshotsTable:
                     move=f"move{i}",
                     fen=fen,
                     board_hash=f"hash{i}",
-                    white_player="P1",
-                    black_player="P2",
                     white_elo=1500,
                     black_elo=1500,
                     result="1-0",
@@ -172,8 +164,6 @@ class TestGameSnapshotsTable:
                     move=f"move{i}",
                     fen=fen,
                     board_hash=f"hash{i}",
-                    white_player="P1",
-                    black_player="P2",
                     white_elo=1500,
                     black_elo=1500,
                     result="1-0",
@@ -206,8 +196,6 @@ class TestGameSnapshotsTable:
                 move="e4",
                 fen=fen1,
                 board_hash="hash1",
-                white_player="P1",
-                black_player="P2",
                 white_elo=1500,
                 black_elo=1500,
                 result="1-0",
@@ -219,8 +207,6 @@ class TestGameSnapshotsTable:
                 move="e5",
                 fen=fen2,
                 board_hash="hash2",
-                white_player="P1",
-                black_player="P2",
                 white_elo=1500,
                 black_elo=1500,
                 result="1-0",
@@ -252,8 +238,6 @@ class TestGameSnapshotsTable:
                 move="e4",
                 fen=fen,
                 board_hash="hash1",
-                white_player="P1",
-                black_player="P2",
                 white_elo=None,
                 black_elo=None,
                 result="1-0",
@@ -285,8 +269,6 @@ class TestGameSnapshotsTable:
                     move=f"move{i}",
                     fen=fen,
                     board_hash=f"hash{i}",
-                    white_player="P1",
-                    black_player="P2",
                     white_elo=1500,
                     black_elo=1500,
                     result=result,
@@ -312,8 +294,6 @@ class TestGameSnapshotsTable:
                 move="Kg3",
                 fen=fen,
                 board_hash="hash1",
-                white_player="P1",
-                black_player="P2",
                 white_elo=1500,
                 black_elo=1500,
                 result="1-0",
@@ -344,8 +324,6 @@ class TestGameSnapshotsTable:
                     move=move,
                     fen=fen,
                     board_hash=f"hash{i}",
-                    white_player="P1",
-                    black_player="P2",
                     white_elo=1500,
                     black_elo=1500,
                     result="1-0",
@@ -359,34 +337,3 @@ class TestGameSnapshotsTable:
             conn.close()
 
             assert [row[0] for row in rows] == moves
-
-    def test_save_snapshot_unicode_player_names(self, temp_db):
-        """Test saving snapshots with unicode in player names."""
-        with patch("packages.train.src.dataset.repositories.game_snapshots.DB_FILE", temp_db):
-            fen = "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1"
-            snapshot = GameSnapshot(
-                raw_game_id=1,
-                move_number=1,
-                turn="w",
-                move="e4",
-                fen=fen,
-                board_hash="hash1",
-                white_player="Иван",
-                black_player="José",
-                white_elo=1500,
-                black_elo=1500,
-                result="1-0",
-            )
-            game_snapshots.save_snapshot(snapshot)
-
-            conn = sqlite3.connect(temp_db)
-            cursor = conn.cursor()
-            cursor.execute(
-                "SELECT white_player, black_player FROM game_snapshots WHERE board_hash = ?",
-                ("hash1",),
-            )
-            row = cursor.fetchone()
-            conn.close()
-
-            assert row[0] == "Иван"
-            assert row[1] == "José"

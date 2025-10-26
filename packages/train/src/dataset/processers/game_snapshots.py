@@ -19,8 +19,6 @@ def raw_game_to_snapshots(raw_game: RawGame) -> Iterator[GameSnapshot]:
     if game is None:
         return  # skip invalid PGNs
 
-    white_player = game.headers.get("White", "Unknown")
-    black_player = game.headers.get("Black", "Unknown")
     white_elo = _safe_int(game.headers.get("WhiteElo"))
     black_elo = _safe_int(game.headers.get("BlackElo"))
     result = game.headers.get("Result", "*")
@@ -43,8 +41,6 @@ def raw_game_to_snapshots(raw_game: RawGame) -> Iterator[GameSnapshot]:
             move=san_move,
             fen=fen,
             board_hash=board_hash,
-            white_player=white_player,
-            black_player=black_player,
             white_elo=white_elo,
             black_elo=black_elo,
             result=result,

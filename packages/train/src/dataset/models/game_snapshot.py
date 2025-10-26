@@ -5,12 +5,10 @@ from dataclasses import dataclass
 class GameSnapshot:
     raw_game_id: int
     move_number: int
-    turn: str
-    move: str
+    turn: str  # 'w' for white, 'b' for black
+    move: str  # move in SAN notation
     fen: str  # FEN string representation of the board
     board_hash: str  # hash of fen + turn + move
-    white_player: str
-    black_player: str
     white_elo: int | None
     black_elo: int | None
-    result: str
+    result: str  # '1-0', '0-1', '1/2-1/2', or '*'

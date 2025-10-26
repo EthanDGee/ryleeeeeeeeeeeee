@@ -16,8 +16,6 @@ class TestGameSnapshot:
             move="e4",
             fen=fen,
             board_hash="abc123",
-            white_player="Player1",
-            black_player="Player2",
             white_elo=1500,
             black_elo=1500,
             result="1-0",
@@ -28,8 +26,6 @@ class TestGameSnapshot:
         assert snapshot.move == "e4"
         assert snapshot.fen == fen
         assert snapshot.board_hash == "abc123"
-        assert snapshot.white_player == "Player1"
-        assert snapshot.black_player == "Player2"
         assert snapshot.white_elo == 1500
         assert snapshot.black_elo == 1500
         assert snapshot.result == "1-0"
@@ -44,8 +40,6 @@ class TestGameSnapshot:
             move="e4",
             fen=fen,
             board_hash="abc123",
-            white_player="Player1",
-            black_player="Player2",
             white_elo=None,
             black_elo=None,
             result="1-0",
@@ -64,8 +58,6 @@ class TestGameSnapshot:
             move="e4",
             fen=fen,
             board_hash="hash1",
-            white_player="Player1",
-            black_player="Player2",
             white_elo=1500,
             black_elo=1500,
             result="1-0",
@@ -83,8 +75,6 @@ class TestGameSnapshot:
             move="e4",
             fen=fen,
             board_hash="abc123",
-            white_player="Player1",
-            black_player="Player2",
             white_elo=1500,
             black_elo=1500,
             result="1-0",
@@ -96,8 +86,6 @@ class TestGameSnapshot:
             move="e4",
             fen=fen,
             board_hash="abc123",
-            white_player="Player1",
-            black_player="Player2",
             white_elo=1500,
             black_elo=1500,
             result="1-0",
@@ -115,8 +103,6 @@ class TestGameSnapshot:
             move="e4",
             fen=fen1,
             board_hash="hash1",
-            white_player="P1",
-            black_player="P2",
             white_elo=1500,
             black_elo=1500,
             result="1-0",
@@ -128,8 +114,6 @@ class TestGameSnapshot:
             move="d4",
             fen=fen2,
             board_hash="hash2",
-            white_player="P1",
-            black_player="P2",
             white_elo=1500,
             black_elo=1500,
             result="1-0",
@@ -146,8 +130,6 @@ class TestGameSnapshot:
             move="e5",
             fen=fen,
             board_hash="hash1",
-            white_player="P1",
-            black_player="P2",
             white_elo=1500,
             black_elo=1500,
             result="1-0",
@@ -168,8 +150,6 @@ class TestGameSnapshot:
                 move="e4",
                 fen=fen,
                 board_hash="hash1",
-                white_player="P1",
-                black_player="P2",
                 white_elo=1500,
                 black_elo=1500,
                 result=result,
@@ -186,8 +166,6 @@ class TestGameSnapshot:
             move="e4",
             fen=fen,
             board_hash="hash1",
-            white_player="Magnus",
-            black_player="Hikaru",
             white_elo=2800,
             black_elo=2750,
             result="1-0",
@@ -205,8 +183,6 @@ class TestGameSnapshot:
             move="e4",
             fen=fen,
             board_hash="hash1",
-            white_player="Beginner1",
-            black_player="Beginner2",
             white_elo=400,
             black_elo=500,
             result="1-0",
@@ -224,8 +200,6 @@ class TestGameSnapshot:
             move="Kg3",
             fen=fen,
             board_hash="hash1",
-            white_player="P1",
-            black_player="P2",
             white_elo=1500,
             black_elo=1500,
             result="1-0",
@@ -245,8 +219,6 @@ class TestGameSnapshot:
                 move=move,
                 fen=fen,
                 board_hash=f"hash_{move}",
-                white_player="P1",
-                black_player="P2",
                 white_elo=1500,
                 black_elo=1500,
                 result="1-0",
@@ -263,8 +235,6 @@ class TestGameSnapshot:
             move="e4",
             fen=fen,
             board_hash="hash1",
-            white_player="P1",
-            black_player="P2",
             white_elo=1500,
             black_elo=None,
             result="1-0",
@@ -282,30 +252,9 @@ class TestGameSnapshot:
             move="e4",
             fen=fen,
             board_hash="hash1",
-            white_player="P1",
-            black_player="P2",
             white_elo=1500,
             black_elo=1500,
             result="1-0",
         )
         repr_str = repr(snapshot)
         assert "GameSnapshot" in repr_str
-
-    def test_special_characters_in_player_names(self):
-        """Test GameSnapshot with special characters in player names."""
-        fen = "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1"
-        snapshot = GameSnapshot(
-            raw_game_id=1,
-            move_number=1,
-            turn="w",
-            move="e4",
-            fen=fen,
-            board_hash="hash1",
-            white_player="Player_123",
-            black_player="Player-456",
-            white_elo=1500,
-            black_elo=1500,
-            result="1-0",
-        )
-        assert snapshot.white_player == "Player_123"
-        assert snapshot.black_player == "Player-456"

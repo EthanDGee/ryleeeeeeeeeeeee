@@ -22,8 +22,6 @@ def create_game_snapshots_table():
         move TEXT,
         fen TEXT,
         board_hash TEXT NOT NULL UNIQUE,
-        white_player TEXT,
-        black_player TEXT,
         white_elo INTEGER,
         black_elo INTEGER,
         result TEXT,
@@ -66,9 +64,9 @@ def save_snapshot(snapshot: GameSnapshot):
             f"""
         INSERT INTO {_TABLE_NAME} (
             raw_game_id, move_number, turn, move, fen,
-            board_hash, white_player, black_player, white_elo, black_elo, result
+            board_hash, white_elo, black_elo, result
         ) VALUES (
-            ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+            ?, ?, ?, ?, ?, ?, ?, ?, ?
         )
         """,
             (
@@ -78,8 +76,6 @@ def save_snapshot(snapshot: GameSnapshot):
                 snapshot.move,
                 snapshot.fen,
                 snapshot.board_hash,
-                snapshot.white_player,
-                snapshot.black_player,
                 snapshot.white_elo,
                 snapshot.black_elo,
                 snapshot.result,
@@ -115,9 +111,7 @@ def _row_to_snapshot(row: tuple) -> GameSnapshot:
         move=row[4],
         fen=row[5],
         board_hash=row[6],
-        white_player=row[7],
-        black_player=row[8],
-        white_elo=row[9],
-        black_elo=row[10],
-        result=row[11],
+        white_elo=row[7],
+        black_elo=row[8],
+        result=row[9],
     )

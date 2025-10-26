@@ -16,24 +16,23 @@ class GameSnapshotsDataset(Dataset):
     """PyTorch Dataset for loading game snapshots from SQLite database.
 
     Loads board positions from FEN strings and converts them to tensor representations.
-    Each sample includes the board state and associated metadata (ELO, result, move).
+    Uses fixed encoding: ELO normalized to [0, 1] range, scalar results, move encoding included.
 
     Args:
         db_path: Path to SQLite database (defaults to DB_FILE from constants)
         elo_filter: Tuple of (min_elo, max_elo) to filter games. If None, includes all games.
         result_filter: List of results to include (e.g., ['1-0', '0-1']). If None, includes all.
-        transform: Optional transform to apply to board tensors
         limit: Maximum number of samples to load. If None, loads all matching records.
 
     Returns:
         Dictionary with keys:
-            - board: Tensor of shape (8, 8, 12) representing piece positions (one-hot encoded)
-            - fen: Original FEN string
-            - move: Move in UCI notation
-            - white_elo: White player's ELO (or 0 if None)
-            - black_elo: Black player's ELO (or 0 if None)
-            - result: Game result (0=loss, 0.5=draw, 1=win for current player)
-            - turn: 0 for white, 1 for black
+            - board: (8, 8, 12) tensor - piece positions one-hot encoded
+            - turn: (2,) tensor - one-hot encoded [white, black]
+            - elo: (2,) tensor - normalized [white_elo / 3000, black_elo / 3000]
+            - result: (1,) tensor - game outcome (0.0=loss, 0.5=draw, 1.0=win)
+            - move_from: (64,) tensor - one-hot encoded source square
+            - move_to: (64,) tensor - one-hot encoded target square
+            - promotion: (5,) tensor - one-hot encoded promotion piece
     """
 
     # Piece type indices for one-hot encoding
@@ -46,16 +45,23 @@ class GameSnapshotsDataset(Dataset):
         chess.KING: 5,
     }
 
+    # Promotion piece encoding (None, N, B, R, Q)
+    PROMOTION_PIECES = {
+        None: 0,
+        chess.KNIGHT: 1,
+        chess.BISHOP: 2,
+        chess.ROOK: 3,
+        chess.QUEEN: 4,
+    }
+
     def __init__(
         self,
         db_path: str | Path | None = None,
         elo_filter: tuple[int, int] | None = None,
         result_filter: list[str] | None = None,
-        transform: Any = None,
         limit: int | None = None,
     ):
         self.db_path = str(db_path) if db_path else DB_FILE
-        self.transform = transform
         self.data = self._load_data(elo_filter, result_filter, limit)
 
     def _load_data(
@@ -150,25 +156,94 @@ class GameSnapshotsDataset(Dataset):
 
         return torch.from_numpy(tensor)
 
-    def _result_to_value(self, result: str, turn: str) -> float:
-        """Convert game result to numerical value from current player's perspective.
+    def _encode_result(self, result: str, turn: str) -> torch.Tensor:
+        """Encode result as scalar value from current player's perspective.
 
         Args:
             result: Result string (e.g., '1-0', '0-1', '1/2-1/2')
             turn: 'w' for white or 'b' for black
 
         Returns:
-            0.0 for loss, 0.5 for draw, 1.0 for win
+            Scalar tensor (1,) - 0.0 for loss, 0.5 for draw, 1.0 for win
         """
         if result == "1/2-1/2":
-            return 0.5
-
-        white_won = result == "1-0"
-
-        if turn == "w":
-            return 1.0 if white_won else 0.0
+            value = 0.5
         else:
-            return 0.0 if white_won else 1.0
+            white_won = result == "1-0"
+            value = (1.0 if white_won else 0.0) if turn == "w" else 0.0 if white_won else 1.0
+
+        return torch.tensor([value], dtype=torch.float32)
+
+    def _encode_turn(self, turn: str) -> torch.Tensor:
+        """Encode turn as one-hot vector.
+
+        Args:
+            turn: 'w' for white or 'b' for black
+
+        Returns:
+            One-hot tensor (2,) for [white, black]
+        """
+        onehot = torch.zeros(2, dtype=torch.float32)
+        if turn == "w":
+            onehot[0] = 1.0
+        else:
+            onehot[1] = 1.0
+        return onehot
+
+    def _normalize_elo(self, white_elo: int, black_elo: int) -> torch.Tensor:
+        """Normalize ELO ratings by dividing by 3000.
+
+        Args:
+            white_elo: White player's ELO
+            black_elo: Black player's ELO
+
+        Returns:
+            Normalized tensor (2,) for [white_elo / 3000, black_elo / 3000]
+        """
+        return torch.tensor([white_elo / 3000.0, black_elo / 3000.0], dtype=torch.float32)
+
+    def _encode_move(
+        self, fen: str, move_san: str
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        """Encode move as one-hot vectors for source, target, and promotion.
+
+        Args:
+            fen: FEN string of the position before the move
+            move_san: Move in SAN notation
+
+        Returns:
+            Tuple of (from_square, to_square, promotion) tensors
+            - from_square: (64,) one-hot tensor
+            - to_square: (64,) one-hot tensor
+            - promotion: (5,) one-hot tensor for [none, N, B, R, Q]
+        """
+        try:
+            board = chess.Board(fen)
+            # Parse SAN move to get UCI move
+            move = board.parse_san(move_san)
+
+            # Encode from square (0-63)
+            from_square = torch.zeros(64, dtype=torch.float32)
+            from_square[move.from_square] = 1.0
+
+            # Encode to square (0-63)
+            to_square = torch.zeros(64, dtype=torch.float32)
+            to_square[move.to_square] = 1.0
+
+            # Encode promotion piece
+            promotion = torch.zeros(5, dtype=torch.float32)
+            promotion_idx = self.PROMOTION_PIECES.get(move.promotion, 0)
+            promotion[promotion_idx] = 1.0
+
+            return from_square, to_square, promotion
+
+        except (ValueError, AssertionError):
+            # If move parsing fails, return zeros
+            from_square = torch.zeros(64, dtype=torch.float32)
+            to_square = torch.zeros(64, dtype=torch.float32)
+            promotion = torch.zeros(5, dtype=torch.float32)
+            promotion[0] = 1.0  # No promotion
+            return from_square, to_square, promotion
 
     def __len__(self) -> int:
         """Return the number of samples in the dataset."""
@@ -181,75 +256,69 @@ class GameSnapshotsDataset(Dataset):
             idx: Index of sample to retrieve
 
         Returns:
-            Dictionary containing board tensor and metadata
+            Dictionary containing encoded tensors ready for training
         """
         sample = self.data[idx]
 
-        board = self._fen_to_tensor(sample["fen"])
-        if self.transform:
-            board = self.transform(board)
+        # Encode all features
+        from_sq, to_sq, promo = self._encode_move(sample["fen"], sample["move"])
 
         return {
-            "board": board,
-            "fen": sample["fen"],
-            "move": sample["move"],
-            "white_elo": sample["white_elo"],
-            "black_elo": sample["black_elo"],
-            "result": self._result_to_value(sample["result"], sample["turn"]),
-            "turn": 0 if sample["turn"] == "w" else 1,
+            "board": self._fen_to_tensor(sample["fen"]),
+            "turn": self._encode_turn(sample["turn"]),
+            "elo": self._normalize_elo(sample["white_elo"], sample["black_elo"]),
+            "result": self._encode_result(sample["result"], sample["turn"]),
+            "move_from": from_sq,
+            "move_to": to_sq,
+            "promotion": promo,
         }
 
 
 if __name__ == "__main__":
-    # Example usage of GameSnapshotsDataset
-    print("Creating GameSnapshotsDataset with all data...")
-    dataset_all = GameSnapshotsDataset(limit=1000)
-    print(f"Dataset size: {len(dataset_all)} positions")
+    # Example 1: Basic dataset
+    print("\n1. Creating basic dataset...")
+    dataset = GameSnapshotsDataset(limit=100)
+    print(f"   Dataset size: {len(dataset)} positions")
 
-    # Get a sample
-    if len(dataset_all) > 0:
-        sample = dataset_all[0]
-        print("\nFirst sample:")
-        print(f"  FEN: {sample['fen']}")
-        print(f"  Move: {sample['move']}")
-        print(f"  Board shape: {sample['board'].shape}")
-        print(f"  White ELO: {sample['white_elo']}")
-        print(f"  Black ELO: {sample['black_elo']}")
-        print(f"  Result: {sample['result']} (0=loss, 0.5=draw, 1=win)")
-        print(f"  Turn: {'White' if sample['turn'] == 0 else 'Black'}")
+    if len(dataset) > 0:
+        sample = dataset[0]
+        print("\n   Sample output structure:")
+        print(f"   - board: {sample['board'].shape} - One-hot encoded pieces")
+        print(
+            f"   - turn: {sample['turn'].shape} - One-hot [white, black] = {sample['turn'].numpy()}"
+        )
+        print(
+            f"   - elo: {sample['elo'].shape} - Normalized [white/3000, black/3000] = {sample['elo'].numpy()}"
+        )
+        print(
+            f"   - result: {sample['result'].shape} - Scalar value = {sample['result'].item():.2f}"
+        )
+        print(f"   - move_from: {sample['move_from'].shape} - One-hot source square")
+        print(f"   - move_to: {sample['move_to'].shape} - One-hot target square")
+        print(f"   - promotion: {sample['promotion'].shape} - One-hot promotion piece")
 
-    # Example with ELO filter (high-rated games only)
-    print("\n\nCreating filtered dataset (ELO 2000-2800)...")
-    dataset_filtered = GameSnapshotsDataset(elo_filter=(2000, 2800), limit=500)
-    print(f"Filtered dataset size: {len(dataset_filtered)} positions")
+    # Example 2: Filtered dataset (high-rated games only)
+    print("\n2. Creating filtered dataset (ELO 1000-2000)...")
+    dataset_filtered = GameSnapshotsDataset(elo_filter=(1000, 2000), limit=50)
+    print(f"   Filtered dataset size: {len(dataset_filtered)} positions")
 
-    if len(dataset_filtered) > 0:
-        sample = dataset_filtered[0]
-        print("Sample from filtered dataset:")
-        print(f"  White ELO: {sample['white_elo']}")
-        print(f"  Black ELO: {sample['black_elo']}")
-
-    # Example with result filter (decisive games only)
-    print("\n\nCreating dataset with decisive games only...")
-    dataset_decisive = GameSnapshotsDataset(result_filter=["1-0", "0-1"], limit=500)
-    print(f"Decisive games dataset size: {len(dataset_decisive)} positions")
-
-    # Use with DataLoader
-    if len(dataset_all) > 0:
+    # Example 3: Use with PyTorch DataLoader
+    if len(dataset) > 0:
         from torch.utils.data import DataLoader
 
-        print("\n\nCreating DataLoader...")
-        dataloader = DataLoader(dataset_all, batch_size=16, shuffle=True)
+        print("\n3. Creating PyTorch DataLoader for training...")
+        dataloader = DataLoader(dataset, batch_size=4, shuffle=True, num_workers=0)
 
         # Get one batch
         batch = next(iter(dataloader))
-        print("\nFirst batch:")
-        print(f"  Batch size: {len(batch['move'])}")
-        print(f"  Board tensors shape: {batch['board'].shape}")
-        print(f"  White ELOs: {batch['white_elo']}")
-        print(f"  Black ELOs: {batch['black_elo']}")
-        print(f"  Results: {batch['result']}")
-        print(f"  Sample moves: {batch['move'][:5]}")
-    else:
-        print("\nDataset is empty. Cannot create DataLoader.")
-        print("Run the dataset generation pipeline first to populate the database.")
+        print("   Batch shapes:")
+        print(f"   - board: {batch['board'].shape}")
+        print(f"   - turn: {batch['turn'].shape}")
+        print(f"   - elo: {batch['elo'].shape}")
+        print(f"   - result: {batch['result'].shape}")
+        print(f"   - move_from: {batch['move_from'].shape}")
+        print(f"   - move_to: {batch['move_to'].shape}")
+        print(f"   - promotion: {batch['promotion'].shape}")
+
+        print("\n   All tensors are ready for training!")
+        print("   Example: loss = criterion(model(batch['board']), batch['result'])")

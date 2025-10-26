@@ -117,8 +117,6 @@ class TestRawGameToSnapshots:
 
         snapshot = snapshots[0]
         assert snapshot.raw_game_id == 42
-        assert snapshot.white_player == "Magnus"
-        assert snapshot.black_player == "Hikaru"
         assert snapshot.white_elo == 2800
         assert snapshot.black_elo == 2750
         assert snapshot.result == "1-0"
@@ -291,19 +289,6 @@ class TestRawGameToSnapshots:
         snapshots = list(raw_game_to_snapshots(game))
 
         assert all(s.result == "1/2-1/2" for s in snapshots)
-
-    def test_unknown_players(self):
-        """Test game without player names."""
-        pgn = """[Event "Test"]
-[Result "1-0"]
-
-1. e4 1-0"""
-        game = RawGame(id=1, pgn=pgn)
-        snapshots = list(raw_game_to_snapshots(game))
-
-        # PGN parser returns "?" for missing players
-        assert snapshots[0].white_player == "?"
-        assert snapshots[0].black_player == "?"
 
     def test_fen_format(self):
         """Test that all snapshots have valid FEN strings."""
