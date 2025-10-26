@@ -1,6 +1,6 @@
 # Play Package
 
-Interactive chess application with multiple engines and dual interfaces (GUI/CLI).
+Interactive chess application with multiple engines and interfaces.
 
 ## Features
 
@@ -8,19 +8,13 @@ Interactive chess application with multiple engines and dual interfaces (GUI/CLI
 - **Interfaces**: Tkinter GUI and CLI
 - **Time Controls**: Per-player timers with timeout detection
 - **Game Recording**: Automatic PGN export with metadata
-- **Visual Feedback**: Move highlighting, material count
-- **Statistics**: Win/loss tracking
+- **Visual Features**: Move highlighting, material count, win/loss tracking
 
-## Quick Start
+## Usage
 
 ```bash
-# GUI (default)
-python -m packages.play.src.main
-
-# CLI
-python -m packages.play.src.main --ui cli
-
-# Custom settings
+python -m packages.play.src.main              # GUI (default)
+python -m packages.play.src.main --ui cli     # CLI
 python -m packages.play.src.main --time-limit 300 --save-dir ~/games
 ```
 
@@ -28,16 +22,13 @@ python -m packages.play.src.main --time-limit 300 --save-dir ~/games
 
 **Stockfish** (recommended):
 ```bash
-# Linux
-sudo apt install stockfish
-
-# macOS
-brew install stockfish
+sudo apt install stockfish  # Linux
+brew install stockfish      # macOS
 ```
 
-**LCZero**: See [docs/engine_setup.md](docs/engine_setup.md) for setup.
+**LCZero**: See [docs/engine_setup.md](docs/engine_setup.md)
 
-## Run Tests
+## Testing
 
 ```bash
 pytest packages/play/tests/ -v
@@ -49,14 +40,14 @@ pytest packages/play/tests/ --cov=packages.play --cov-report=html
 ```
 play/
 ├── src/
-│   ├── main.py          # Application entry point
-│   ├── game.py          # Game logic and state
-│   ├── engines/         # Chess engine implementations
-│   └── ui/              # GUI and CLI interfaces
-└── tests/               # 73 tests
+│   ├── main.py      # Entry point
+│   ├── game/        # Game logic and state
+│   ├── player/      # Player implementations (human, bots)
+│   └── ui/          # GUI and CLI
+└── tests/           # Test suite
 ```
 
 ## Documentation
 
-- [Engine Setup Guide](docs/engine_setup.md)
-- [Testing Guide](docs/testing.md)
+- [Engine Setup Guide](docs/engine_setup.md) - Stockfish and LCZero installation
+- [Testing Guide](docs/testing.md) - Testing best practices

@@ -1,20 +1,50 @@
 # Train Package
 
-ML training pipeline for chess AI models.
+ML training pipeline and dataset ETL for chess AI models.
 
-## Status
+## Components
 
-This package is under development. The dataset functionality has been moved to the `packages/dataset` package.
+### Dataset Pipeline (`src/dataset/`)
+ETL pipeline for Lichess game data:
+- **Requesters**: Fetch Lichess game data and metadata
+- **Repositories**: Database storage layer (SQLite)
+- **Processers**: Transform games into training snapshots
+- **Loaders**: Load game snapshots and legal moves for training
+- **Plotter**: Visualization utilities for dataset analysis
+
+### Models (`src/models/`)
+ML model prototypes (in development):
+- `random_forest.ipynb` - Random forest classifier
+- `ann.ipynb` - Artificial neural network
+
+## Usage
+
+```bash
+# Run dataset pipeline
+python -m packages.train.src.dataset.main
+
+# Access models in Jupyter
+jupyter lab packages/train/src/models/
+```
+
+## Testing
+
+```bash
+pytest packages/train/tests/ -v
+pytest packages/train/tests/ --cov=packages.train --cov-report=html
+```
 
 ## Structure
 
 ```
 train/
 ├── src/
-│   └── models/        # ML model definitions
-└── tests/             # Model tests
+│   ├── dataset/           # Lichess data ETL pipeline
+│   │   ├── requesters/    # Data fetching
+│   │   ├── repositories/  # Database layer
+│   │   ├── processers/    # Data transformation
+│   │   ├── loaders/       # Training data loaders
+│   │   └── plotter.py     # Visualization
+│   └── models/            # ML model notebooks
+└── tests/                 # Test suite
 ```
-
-## Related Packages
-
-- See [packages/dataset](src/dataset/README.md) for data pipeline and preprocessing
