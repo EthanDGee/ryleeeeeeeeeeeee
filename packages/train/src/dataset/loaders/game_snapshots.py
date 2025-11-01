@@ -173,7 +173,7 @@ class GameSnapshotsDataset(Dataset):
             # Parse SAN move to get UCI move
             move = board.parse_san(move_san)
 
-            # get the rows and columsn for the start and end positions
+            # get the rows and columns for the start and end positions
             start_col = move.from_square % 8
             start_row = move.from_square // 8
 
@@ -210,7 +210,7 @@ class GameSnapshotsDataset(Dataset):
         # to avoid the off by one error caused by the database starting at 1
         idx += self.start_index + 1
 
-        # # retrieve index from the database slice
+        # retrieve index from the database slice
         with sqlite3.connect(self.db_path) as conn:
             query = "SELECT fen, move, white_elo, black_elo, result, turn FROM game_snapshots WHERE id=?"
             cur = conn.cursor()
@@ -227,8 +227,6 @@ class GameSnapshotsDataset(Dataset):
                 "turn": row[5],
             }
 
-        # # convert to tensorwhite_elo
-
         # Encode all features
 
         # _encode_move
@@ -241,57 +239,7 @@ class GameSnapshotsDataset(Dataset):
         # board
         board = self._fen_to_tensor(data["fen"])
 
-        # combine to 1d tensor and output
+        # combine to 1d tensor
         labels = torch.cat((elos, turn, board), 0)
 
         return labels, (chosen_move, promo)
-
-
-if __name__ == "__main__":
-    # Example 1: Basic dataset
-    print("\n1. Creating basic dataset...")
-    dataset = GameSnapshotsDataset(start_index=0, num_indexes=100)
-    print(f"   Dataset size: {len(dataset)} positions")
-
-    if len(dataset) > 0:
-        sample = dataset[0]
-        print("\n   Sample output structure:")
-        print(f"   - board: {sample['board'].shape} - One-hot encoded pieces")
-        print(
-            f"   - turn: {sample['turn'].shape} - One-hot [white, black] = {sample['turn'].numpy()}"
-        )
-        print(
-            f"   - elo: {sample['elo'].shape} - Normalized [white/3000, black/3000] = {sample['elo'].numpy()}"
-        )
-        print(
-            f"   - result: {sample['result'].shape} - Scalar value = {sample['result'].item():.2f}"
-        )
-        print(f"   - move_from: {sample['move_from'].shape} - One-hot source square")
-        print(f"   - move_to: {sample['move_to'].shape} - One-hot target square")
-        print(f"   - promotion: {sample['promotion'].shape} - One-hot promotion piece")
-
-    # Example 2: Filtered dataset (high-rated games only)
-    print("\n2. Creating filtered dataset (ELO 1000-2000)...")
-    dataset_filtered = GameSnapshotsDataset(start_index=0, num_indexes=50)
-    print(f"   Filtered dataset size: {len(dataset_filtered)} positions")
-
-    # Example 3: Use with PyTorch DataLoader
-    if len(dataset) > 0:
-        from torch.utils.data import DataLoader
-
-        print("\n3. Creating PyTorch DataLoader for training...")
-        dataloader = DataLoader(dataset, batch_size=4, shuffle=True, num_workers=0)
-
-        # Get one batch
-        batch = next(iter(dataloader))
-        print("   Batch shapes:")
-        print(f"   - board: {batch['board'].shape}")
-        print(f"   - turn: {batch['turn'].shape}")
-        print(f"   - elo: {batch['elo'].shape}")
-        print(f"   - result: {batch['result'].shape}")
-        print(f"   - move_from: {batch['move_from'].shape}")
-        print(f"   - move_to: {batch['move_to'].shape}")
-        print(f"   - promotion: {batch['promotion'].shape}")
-
-        print("\n   All tensors are ready for training!")
-        print("   Example: loss = criterion(model(batch['board']), batch['result'])")
