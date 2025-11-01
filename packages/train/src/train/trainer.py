@@ -38,13 +38,13 @@ class Trainer:
         self.learning_rates: list = hyperparameters["learning_rates"]
         self.decay_rates: list = hyperparameters["decay_rates"]
         self.betas: list = hyperparameters["betas"]
-        self.momementums: list = hyperparameters["momentums"]
+        self.momentums: list = hyperparameters["momentums"]
 
         # current parameters
         self.current_lr: float = self.learning_rates[0]
         self.current_decay_rate: float = self.decay_rates[0]
         self.current_beta: float = self.betas[0]
-        self.current_momentum: float = self.momementums[0]
+        self.current_momentum: float = self.momentums[0]
 
         # data loaders
         total_instances = database_info["num_indexes"]
@@ -81,10 +81,11 @@ class Trainer:
 
     def _create_dataloader(self, start: int, num_indexes: int) -> DataLoader:
         """
-        Creates a DataLoader for the given dataset.
+        Creates a DataLoader for a subset of the GameSnapshotsDataset.
 
         Args:
-            dataset (GameSnapshotsDataset): The dataset to create the DataLoader for.
+            start (int): The starting index for the dataset subset.
+            num_indexes (int): The number of indexes to include in the dataset subset.
         """
         dataset = GameSnapshotsDataset(start, num_indexes)
 
@@ -112,7 +113,7 @@ class Trainer:
     def train(self):
         """
         Trains the model using the current hyper parameters saving the model periodically
-        to a check point dirctory based on self.auto_save_interval as well as training
+        to a check point directory based on self.auto_save_interval as well as training
         information before saving the final model
 
         Returns:
@@ -179,7 +180,7 @@ class Trainer:
 
                 # Only calculate the accuracy of moves
                 _, predicted_moves = torch.max(predicted_moves.data, 1)
-                correct_moves = (predicted_moves == move_y).sum().item()
+                correct_moves += (predicted_moves == move_y).sum().item()
 
         avg_loss = total_loss / len(dataloader.dataset)
         accuracy = 100 * correct_moves / len(dataloader.dataset)
@@ -204,7 +205,7 @@ class Trainer:
         #
         #
         self.current_beta = random.choice(self.betas)
-        self.current_momentum = random.choice(self.momementums)
+        self.current_momentum = random.choice(self.momentums)
 
     def random_search(self, iterations: int):
         """
@@ -253,7 +254,7 @@ class Trainer:
         Saves the model state to a file in the appropriate directory.
 
         This method saves the state of the model to either the check_points
-        directory for the model or the final output directoryd depending on
+        directory for the model or the final output directory depending on
         whether the auto-save option is enabled or not.
 
         Args:
@@ -261,7 +262,7 @@ class Trainer:
                 directory or the final save directory. Defaults to True.
 
         Returns:
-            train_dataloader
+            None
         """
         print("Saving model...")
         # save the model
