@@ -49,6 +49,20 @@ class Trainer:
         # data loaders
         total_instances = database_info["num_indexes"]
 
+        # Other
+        self.cuda_enabled: bool = values["cuda_enabled"]
+        if self.cuda_enabled and not torch.cuda.is_available():
+            print("Warning: cuda_enabled=True but CUDA is not available. Falling back to CPU.")
+            self.cuda_enabled = False
+        # Select device
+        self.device = torch.device(
+            "cuda" if self.cuda_enabled else "cpu"
+        )
+
+        # Move model and criterion to the device
+        self.model.to(self.device)
+        self.criterion = self.criterion.to(self.device)
+
         fill_database_with_snapshots(
             snapshots_threshold=total_instances, max_size_gb=database_info["max_size_gb"]
         )
@@ -90,7 +104,11 @@ class Trainer:
         dataset = GameSnapshotsDataset(start, num_indexes)
 
         dataloader = DataLoader(
-            dataset, batch_size=self.batch_size, shuffle=True, num_workers=self.num_workers
+            dataset,
+            batch_size=self.batch_size,
+            shuffle=True,
+            num_workers=self.num_workers,
+            pin_memory=(self.device.type == "cuda"),
         )
 
         return dataloader
@@ -131,10 +149,16 @@ class Trainer:
 
         self.model.train()
         # Training loop
+        non_blocking = self.device.type == "cuda"
         for epoch in range(self.num_epochs):
             self.model.train()
 
             for _batch, (batch_x, (move_y, promo_y)) in enumerate(self.train_dataloader):
+                # move batches to device
+                batch_x = batch_x.to(self.device, non_blocking=non_blocking)
+                move_y = move_y.to(self.device, non_blocking=non_blocking)
+                promo_y = promo_y.to(self.device, non_blocking=non_blocking)
+
                 optimizer.zero_grad()
                 predicted_moves, promos = self.model(batch_x)
 
@@ -166,11 +190,16 @@ class Trainer:
 
         total_loss = 0.0
         correct_moves = 0
-        total_loss = 0
 
         self.model.eval()
+        non_blocking = self.device.type == "cuda"
         with torch.no_grad():
             for _batch, (batch_x, (move_y, promo_y)) in enumerate(dataloader):
+                # move batches to device
+                batch_x = batch_x.to(self.device, non_blocking=non_blocking)
+                move_y = move_y.to(self.device, non_blocking=non_blocking)
+                promo_y = promo_y.to(self.device, non_blocking=non_blocking)
+
                 predicted_moves, promos = self.model(batch_x)
 
                 move_loss = self.criterion(predicted_moves, move_y)

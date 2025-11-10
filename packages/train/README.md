@@ -5,7 +5,9 @@ ML training pipeline and dataset ETL for chess AI models.
 ## Components
 
 ### Dataset Pipeline (`src/dataset/`)
+
 ETL pipeline for Lichess game data:
+
 - **Requesters**: Fetch Lichess game data and metadata
 - **Repositories**: Database storage layer (SQLite)
 - **Processers**: Transform games into training snapshots
@@ -13,7 +15,9 @@ ETL pipeline for Lichess game data:
 - **Plotter**: Visualization utilities for dataset analysis
 
 ### Models (`src/models/`)
+
 ML model prototypes (in development):
+
 - `random_forest.ipynb` - Random forest classifier
 - `ann.ipynb` - Artificial neural network
 
@@ -95,6 +99,7 @@ The training entrypoint takes a single argument: the path to a JSON configuratio
 
 ### Field descriptions
 
+- `cuda_enabled` (bool, optional): If true and a CUDA-capable GPU is available, training will use the model to speedup training process.
 - `num_iterations` (int): Number of random hyperparameter configurations to try. For each iteration, one value is sampled from each list in `hyperparameters` and trained for `num_epochs`.
 
 - `hyperparameters` (object):
