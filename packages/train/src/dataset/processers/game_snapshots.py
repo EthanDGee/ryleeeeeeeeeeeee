@@ -26,10 +26,11 @@ def raw_game_to_snapshots(raw_game: RawGame) -> Iterator[GameSnapshot]:
 
     for move in game.mainline_moves():
         turn = "w" if board.turn == chess.WHITE else "b"
+        previous_board = board.copy()
         san_move = board.san(move)
         board.push(move)
 
-        fen = board.fen()
+        fen = previous_board.fen()
 
         yield GameSnapshot(
             raw_game_id=raw_game.id if raw_game.id is not None else 0,  # link back to raw game

@@ -24,7 +24,7 @@ class NeuralNetwork(nn.Module):
 
         # here we split into two heads to handle move and promote predictions separately
         self.move_head = nn.Sequential(nn.Linear(32, 4096), nn.Softmax(dim=1))
-        self.promote_head = nn.Sequential(nn.Linear(32, 4), nn.Softmax(dim=1))
+        self.promote_head = nn.Sequential(nn.Linear(32, 5), nn.Softmax(dim=1))
 
     def forward(self, x):
         shared_output = self.shared(x)
