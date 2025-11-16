@@ -78,7 +78,9 @@ def fill_database_with_snapshots_from_lichess_filename(
     print(f"Found file: {file_meta.filename} ({file_meta.size_gb} GB, {file_meta.games} games)")
 
     if not file_meta.processed:
-        games_downloaded = sum(1 for _ in fetch_raw_games_from_file(file_meta))
+        games_downloaded = 0
+        for _ in fetch_raw_games_from_file(file_meta):
+            games_downloaded += 1
         print(f"Downloaded and saved {games_downloaded} raw games from {file_meta.filename}.")
     else:
         print(f"File already downloaded: {file_meta.filename}")
