@@ -87,8 +87,7 @@ def fill_database_with_snapshots_from_lichess_filename(
     print(f"Processing games from {file_meta.filename}...")
     processor = SnapshotBatchProcessor(batch_size=batch_size, print_interval=print_interval)
     games_processed = processor.process_games(
-        games=fetch_unprocessed_raw_games(),
-        filter_game=lambda game: game.file_id == file_meta.id,
+        games=fetch_unprocessed_raw_games(file_id=file_meta.id),
     )
     print(f"Processed {games_processed} games from {file_meta.filename}.")
 
