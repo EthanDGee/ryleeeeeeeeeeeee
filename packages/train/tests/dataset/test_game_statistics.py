@@ -1,6 +1,5 @@
 """Tests for game statistics extraction and storage."""
 
-import sqlite3
 import tempfile
 from pathlib import Path
 
