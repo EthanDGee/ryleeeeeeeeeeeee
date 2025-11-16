@@ -55,8 +55,7 @@ def fetch_new_raw_games(
         for game in fetch_raw_games_from_file(file_meta):
             any_games = True
             yield game
-        if any_games:
-            mark_file_as_processed(file_meta)
+        mark_file_as_processed(file_meta)
 
 
 def _split_pgn_text_into_games(pgn_text: str) -> Iterator[str]:

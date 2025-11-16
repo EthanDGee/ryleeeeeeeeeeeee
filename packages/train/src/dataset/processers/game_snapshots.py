@@ -114,7 +114,6 @@ class SnapshotBatchProcessor:
             self._flush_batch()
             mark_raw_game_as_processed(game)
 
-        self._flush_batch()
         return games_processed
 
     def _flush_batch(self) -> None:

@@ -23,6 +23,7 @@ def extract_statistics_from_raw_game(raw_game: RawGame) -> GameStatistics | None
     game = chess.pgn.read_game(pgn_io)
     
     if game is None:
+        print(f"Warning: Failed to parse PGN for raw_game_id={raw_game.id}")
         return None
     
     headers = game.headers
@@ -70,7 +71,7 @@ def extract_statistics_from_raw_game(raw_game: RawGame) -> GameStatistics | None
         # Variant
         variant=headers.get("Variant"),
         # Lichess URL (may be in Site field)
-        lichess_url=headers.get("Site") if headers.get("Site") and "lichess.org" in headers.get("Site", "") else None,
+        lichess_url=headers.get("Site") if headers.get("Site") and "lichess.org" in headers.get("Site") else None,
         # Calculated
         total_moves=total_moves if total_moves > 0 else None,
     )
