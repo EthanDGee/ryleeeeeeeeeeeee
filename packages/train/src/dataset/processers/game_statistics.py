@@ -23,6 +23,7 @@ def extract_statistics_from_raw_game(raw_game: RawGame) -> GameStatistics | None
     game = chess.pgn.read_game(pgn_io)
     
     if game is None:
+        print(f"Warning: Failed to parse PGN for raw_game_id={raw_game.id}")
         return None
     
     headers = game.headers
