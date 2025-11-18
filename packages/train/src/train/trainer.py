@@ -13,7 +13,9 @@ from packages.train.src.constants import (
     EPOCH_INFO_FILE_NAME,
     FINAL_SAVES_DIR,
 )
-from packages.train.src.dataset.fillers.fill_snapshots import fill_database_with_snapshots
+from packages.train.src.dataset.fillers.fill_snapshots_and_statistics import (
+    fill_database_with_snapshots,
+)
 from packages.train.src.dataset.loaders.game_snapshots import GameSnapshotsDataset
 
 
