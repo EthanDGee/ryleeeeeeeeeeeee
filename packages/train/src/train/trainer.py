@@ -159,19 +159,17 @@ class Trainer:
         for epoch in range(self.num_epochs):
             self.model.train()
 
-            for _batch, (batch_x, (move_y, promo_y)) in enumerate(self.train_dataloader):
+            for _batch, (batch_x, move_y) in enumerate(self.train_dataloader):
                 # move batches to device
                 batch_x = batch_x.to(self.device, non_blocking=non_blocking)
                 move_y = move_y.to(self.device, non_blocking=non_blocking)
-                promo_y = promo_y.to(self.device, non_blocking=non_blocking)
 
                 optimizer.zero_grad()
-                predicted_moves, promos = self.model(batch_x)
+                predicted_moves = self.model(batch_x)
 
                 # calculate loss
                 move_loss = self.criterion(predicted_moves, move_y)
-                promo_loss = self.criterion(promos, promo_y)
-                loss = move_loss + promo_loss
+                loss = move_loss
 
                 loss.backward()
                 optimizer.step()
@@ -200,17 +198,15 @@ class Trainer:
         self.model.eval()
         non_blocking = self.device.type == "cuda"
         with torch.no_grad():
-            for _batch, (batch_x, (move_y, promo_y)) in enumerate(dataloader):
+            for _batch, (batch_x, move_y) in enumerate(dataloader):
                 # move batches to device
                 batch_x = batch_x.to(self.device, non_blocking=non_blocking)
                 move_y = move_y.to(self.device, non_blocking=non_blocking)
-                promo_y = promo_y.to(self.device, non_blocking=non_blocking)
 
-                predicted_moves, promos = self.model(batch_x)
+                predicted_moves = self.model(batch_x)
 
                 move_loss = self.criterion(predicted_moves, move_y)
-                promo_loss = self.criterion(promos, promo_y)
-                loss = move_loss + promo_loss
+                loss = move_loss
                 total_loss += loss.item()
 
                 # Only calculate the accuracy of moves

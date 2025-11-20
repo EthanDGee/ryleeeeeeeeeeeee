@@ -54,8 +54,7 @@ class TestGameSnapshotsDataset:
         dataset = GameSnapshotsDataset(0, 1, db_path=":memory:")
         fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
         move_san = "e4"
-        move, promo = dataset._encode_move(fen, move_san)
-        assert promo == 0  # No promotion
+        move = dataset._encode_move(fen, move_san)
         assert isinstance(move, int)
 
     def test_encode_move_invalid(self):
@@ -63,9 +62,8 @@ class TestGameSnapshotsDataset:
         dataset = GameSnapshotsDataset(0, 1, db_path=":memory:")
         fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
         move_san = "invalid_move"
-        move, promo = dataset._encode_move(fen, move_san)
+        move = dataset._encode_move(fen, move_san)
         assert move == 0
-        assert promo == 0
 
     def test_len_method(self):
         """Test the __len__ method for dataset size."""

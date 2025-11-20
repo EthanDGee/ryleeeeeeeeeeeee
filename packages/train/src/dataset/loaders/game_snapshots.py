@@ -9,6 +9,7 @@ import torch
 from torch.utils.data import Dataset
 
 from packages.train.src.constants import DB_FILE
+from packages.train.src.dataset.loaders.legal_moves import LegalMovesDataset
 from packages.train.src.dataset.repositories.game_snapshots import count_snapshots
 
 
@@ -62,6 +63,8 @@ class GameSnapshotsDataset(Dataset):
 
         self.db_path = str(db_path) if db_path else DB_FILE
 
+        self.legal_moves = LegalMovesDataset()
+
     def _fen_to_tensor(self, fen: str) -> torch.Tensor:
         """Convert FEN string to tensor representation.
 
@@ -99,7 +102,8 @@ class GameSnapshotsDataset(Dataset):
 
         return torch.from_numpy(tensor)
 
-    def _encode_result(self, result: str, turn: str) -> torch.Tensor:
+    @staticmethod
+    def _encode_result(result: str, turn: str) -> torch.Tensor:
         """Encode result as scalar value from current player's perspective.
 
         Args:
@@ -117,7 +121,8 @@ class GameSnapshotsDataset(Dataset):
 
         return torch.tensor([value], dtype=torch.float32)
 
-    def _encode_turn(self, turn: str) -> torch.Tensor:
+    @staticmethod
+    def _encode_turn(turn: str) -> torch.Tensor:
         """Encode turn as one-hot vector.
 
         Args:
@@ -133,7 +138,8 @@ class GameSnapshotsDataset(Dataset):
             onehot[1] = 1.0
         return onehot
 
-    def _normalize_elo(self, white_elo: int, black_elo: int) -> torch.Tensor:
+    @staticmethod
+    def _normalize_elo(white_elo: int, black_elo: int) -> torch.Tensor:
         """Normalize ELO ratings through z normalization based on values precomputed from all
         of the data from 2013
 
@@ -153,43 +159,28 @@ class GameSnapshotsDataset(Dataset):
 
         return torch.tensor([white_z_norm, black_z_norm], dtype=torch.float32)
 
-    def _encode_move(self, fen: str, move_san: str) -> tuple[int, int]:
-        """Encode move as indexes of start and end postions and promotion index.
+    def _encode_move(self, fen: str, move_san: str) -> int:
+        """Encode move as indexes of start and end positions and promotion index.
 
         Args:
             fen: FEN string of the position before the move
             move_san: Move in SAN notation
 
         Returns:
-            Tuple of (from_square, to_square, promotion) tensors
-            - move: int index stores both start and end positions
-            - promotion: int one-hot tensor for [none, N, B, R, Q]
+            - move: int index of move in legal_moves dataset
         """
         try:
             board = chess.Board(fen)
-            # Parse SAN move to get UCI move
+
+            # Parse SAN move to get UCI move to determine promotion
             move = board.parse_san(move_san)
+            move_index = self.legal_moves.get_index_from_move(board.uci(move))
 
-            # get the rows and columns for the start and end positions
-            start_col = move.from_square % 8
-            start_row = move.from_square // 8
-
-            end_col = move.to_square % 8
-            end_row = move.to_square // 8
-
-            # encode the values by using base 8 numering giving each id a digit place (stored in base 10)
-            move_index = start_col
-            move_index += 8 * start_row
-            move_index += 8**2 * end_col
-            move_index += 8**3 * end_row
-
-            promotion_idx = self.PROMOTION_PIECES.get(move.promotion, 0)
-
-            return move_index, promotion_idx
+            return move_index
 
         except (ValueError, AssertionError):
             # If move parsing fails, return zeros
-            return 0, 0
+            return 0
 
     def __len__(self) -> int:
         """Return the number of samples in the dataset."""
@@ -210,17 +201,16 @@ class GameSnapshotsDataset(Dataset):
         # retrieve index from the database slice with JOIN to game_statistics
         with sqlite3.connect(self.db_path) as conn:
             query = """
-                SELECT
-                    gs.fen,
-                    gs.move,
-                    gs.turn,
-                    gst.white_elo,
-                    gst.black_elo,
-                    gst.result
-                FROM game_snapshots gs
-                JOIN game_statistics gst ON gs.raw_game_id = gst.raw_game_id
-                WHERE gs.id=?
-            """
+                    SELECT gs.fen,
+                           gs.move,
+                           gs.turn,
+                           gst.white_elo,
+                           gst.black_elo,
+                           gst.result
+                    FROM game_snapshots gs
+                             JOIN game_statistics gst ON gs.raw_game_id = gst.raw_game_id
+                    WHERE gs.id = ? \
+                    """
             cur = conn.cursor()
             row = cur.execute(query, (idx,)).fetchone()
             if row is None:
@@ -238,7 +228,7 @@ class GameSnapshotsDataset(Dataset):
         # Encode all features
 
         # _encode_move
-        chosen_move, promo = self._encode_move(data["fen"], data["move"])
+        chosen_move = self._encode_move(data["fen"], data["move"])
         turn = self._encode_turn(data["turn"])
 
         # elos
@@ -250,4 +240,4 @@ class GameSnapshotsDataset(Dataset):
         # combine to 1d tensor
         labels = torch.cat((elos, turn, board), 0)
 
-        return labels, (chosen_move, promo)
+        return labels, chosen_move

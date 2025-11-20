@@ -11,7 +11,7 @@ def get_legal_moves() -> Iterator[LegalMove]:
 
     Each yielded value is a LegalMove(move: str, types: List[str]).
     """
-    files = "ABCDEFGH"
+    files = "abcdefgh"
     ranks = "12345678"
 
     def to_square(x: int, y: int) -> str:
@@ -57,6 +57,21 @@ def get_legal_moves() -> Iterator[LegalMove]:
                     # King
                     if abs(dx) <= 1 and abs(dy) <= 1:
                         add("king")
+
+    # add pawn promotions
+    for f in files:
+        for p in "QRBN":
+            moves.setdefault(f"{f}8={p}+", set()).add("pawn")
+            moves.setdefault(f"{f}1={p}+", set()).add("pawn")
+
+    # add castling
+    moves.setdefault("0-0", set()).add("king,rook")
+    moves.setdefault("0-0-0", set()).add("king,rook")
+
+    # add en passant
+    for f in files:
+        moves.setdefault(f"{f}5e3", set()).add("pawn")
+        moves.setdefault(f"{f}4e3", set()).add("pawn")
 
     # Yield sorted moves lazily instead of returning all at once
     for m, t in sorted(moves.items()):
