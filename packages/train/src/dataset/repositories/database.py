@@ -6,6 +6,9 @@ from packages.train.src.dataset.repositories.files_metadata import create_files_
 from packages.train.src.dataset.repositories.game_snapshots import create_game_snapshots_table
 from packages.train.src.dataset.repositories.game_statistics import create_game_statistics_table
 from packages.train.src.dataset.repositories.legal_move import create_legal_moves_table
+from packages.train.src.dataset.repositories.processed_snapshots import (
+    create_processed_snapshots_table,
+)
 from packages.train.src.dataset.repositories.raw_games import create_raw_games_table
 
 # List of functions that create tables in the database
@@ -15,6 +18,7 @@ TABLE_CREATORS: list[Callable[[], None]] = [
     create_game_snapshots_table,
     create_game_statistics_table,
     create_legal_moves_table,
+    create_processed_snapshots_table,
 ]
 
 
