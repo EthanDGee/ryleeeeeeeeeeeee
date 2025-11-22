@@ -20,6 +20,12 @@ from packages.train.src.dataset.loaders.game_snapshots import GameSnapshotsDatas
 
 
 def make_directory(directory_name):
+    """
+    Creates a directory if it does not already exist.
+
+    Args:
+        directory_name (str): The name of the directory to create.
+    """
     try:
         os.mkdir(directory_name)
         print(f"Directory '{directory_name}' created successfully.")
@@ -28,7 +34,21 @@ def make_directory(directory_name):
 
 
 class Trainer:
+    """
+    A class for training a PyTorch model for chess move prediction.
+
+    This class encapsulates the entire training process, including data loading,
+    hyperparameter tuning, model training, evaluation, and checkpointing.
+    """
+
     def __init__(self, values: dict, model):
+        """
+        Initializes the Trainer object.
+
+        Args:
+            values (dict): A dictionary containing hyperparameters, database information, and checkpoint settings.
+            model: The PyTorch model to be trained.
+        """
         hyperparameters = values["hyperparameters"]
         database_info = values["database_info"]
         checkpoints = values["checkpoints"]
@@ -106,6 +126,9 @@ class Trainer:
         Args:
             start (int): The starting index for the dataset subset.
             num_indexes (int): The number of indexes to include in the dataset subset.
+
+        Returns:
+            DataLoader: A DataLoader for the specified subset of the dataset.
         """
         dataset = GameSnapshotsDataset(start, num_indexes)
 
@@ -123,9 +146,6 @@ class Trainer:
         """
         Updates the model name to be a description of the current learning rate, decay rate,
         beta, and momentum values.
-
-        Returns:
-            None
         """
         updated_name = f"del_lr{self.current_lr}"
         updated_name += f"_decay{self.current_decay_rate}"
@@ -136,12 +156,9 @@ class Trainer:
 
     def train(self):
         """
-        Trains the model using the current hyper parameters saving the model periodically
-        to a check point directory based on self.auto_save_interval as well as training
-        information before saving the final model
-
-        Returns:
-            None
+        Trains the model using the current hyperparameters, saving the model periodically
+        to a checkpoint directory based on self.auto_save_interval, as well as training
+        information, before saving the final model.
         """
         # Define loss function and optimizer
         optimizer = Adam(
@@ -159,13 +176,15 @@ class Trainer:
         for epoch in range(self.num_epochs):
             self.model.train()
 
-            for _batch, (batch_x, move_y) in enumerate(self.train_dataloader):
-                # move batches to device
-                batch_x = batch_x.to(self.device, non_blocking=non_blocking)
+            for _batch, ((board, metadata), move_y) in enumerate(self.train_dataloader):
+                # batch_x is a tuple (metadata, board), need to handle each component
+                # Unpack board and metadata from batch_x tuple
+                metadata = metadata.to(self.device, non_blocking=non_blocking)
+                board = board.to(self.device, non_blocking=non_blocking)
                 move_y = move_y.to(self.device, non_blocking=non_blocking)
 
                 optimizer.zero_grad()
-                predicted_moves = self.model(batch_x)
+                predicted_moves = self.model(metadata, board)
 
                 # calculate loss
                 move_loss = self.criterion(predicted_moves, move_y)
@@ -182,14 +201,15 @@ class Trainer:
             self._update_epoch_csv(epoch)
         self._save_model(auto_save=False)
 
-    def _dataset_loss(self, dataloader):
+    def _dataset_loss(self, dataloader: DataLoader) -> tuple[float, float]:
         """
         Computes the loss and accuracy of the model for a given dataloader.
 
+        Args:
+            dataloader (DataLoader): The DataLoader to evaluate the model on.
+
         Returns:
-            tuple: A tuple containing two elements:
-                - avg_val_loss (float): the average validation loss
-                - val_accuracy (float): the percentage of correct predictions
+            tuple: A tuple containing the average loss and accuracy.
         """
 
         total_loss = 0.0
@@ -198,12 +218,13 @@ class Trainer:
         self.model.eval()
         non_blocking = self.device.type == "cuda"
         with torch.no_grad():
-            for _batch, (batch_x, move_y) in enumerate(dataloader):
-                # move batches to device
-                batch_x = batch_x.to(self.device, non_blocking=non_blocking)
+            for _batch, ((board, metadata), move_y) in enumerate(dataloader):
+                # batch_x is a tuple (metadata, board), need to handle each component
+                metadata = metadata.to(self.device, non_blocking=non_blocking)
+                board = board.to(self.device, non_blocking=non_blocking)
                 move_y = move_y.to(self.device, non_blocking=non_blocking)
 
-                predicted_moves = self.model(batch_x)
+                predicted_moves = self.model(metadata, board)
 
                 move_loss = self.criterion(predicted_moves, move_y)
                 loss = move_loss
@@ -227,14 +248,9 @@ class Trainer:
         This method selects random values for learning rate, decay rate, beta,
         and momentum from their respective lists and assigns them to the object's
         instance variables.
-
-        Returns:
-            None
         """
         self.current_lr = random.choice(self.learning_rates)
         self.current_decay_rate = random.choice(self.decay_rates)
-        #
-        #
         self.current_beta = random.choice(self.betas)
         self.current_momentum = random.choice(self.momentums)
 
@@ -243,11 +259,9 @@ class Trainer:
         Conducts a random search for hyperparameter optimization by iteratively testing
         random configurations, evaluating their performance, and updating the best set
         of hyperparameters based on validation loss.
-        Args:
-            iterations (int): The number of random configurations to search over
 
-        Returns:
-            None
+        Args:
+            iterations (int): The number of random configurations to search over.
         """
         best_val_loss = float("inf")
         best_hyperparameters = {}
@@ -291,9 +305,6 @@ class Trainer:
         Args:
             auto_save (bool): Indicates whether to save the model in the auto-save
                 directory or the final save directory. Defaults to True.
-
-        Returns:
-            None
         """
         print("Saving model...")
         # save the model
@@ -316,15 +327,8 @@ class Trainer:
         and the timestamp to a CSV file. If the file does not exist, it creates the
         file and writes the appropriate headers.
 
-        Parameters:
+        Args:
             timestamp (str): A timestamp string representing the version of the save.
-
-        Raises:
-            FileNotFoundError: If the path to the save directory does not exist or cannot
-            be created.
-
-        Return:
-              None
         """
         csv_path = self.final_save + self.model_name + "/" + CHECK_POINT_INFO_FILE_NAME
 
@@ -357,11 +361,8 @@ class Trainer:
         If the CSV file exists, the function appends the computed epoch details to it. The method
         also prints a summary of the epoch's performance statistics.
 
-        Parameters:
+        Args:
             epoch (int): The current epoch index being processed.
-
-        Returns:
-            None
         """
         csv_path = self.final_save + self.model_name + "/" + EPOCH_INFO_FILE_NAME
 

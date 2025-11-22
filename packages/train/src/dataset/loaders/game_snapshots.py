@@ -81,7 +81,7 @@ class GameSnapshotsDataset(Dataset):
             Tensor of shape (8*8*12,)
         """
         board = chess.Board(fen)
-        tensor = np.zeros((8, 8, 12), dtype=np.float32)
+        tensor = np.zeros((12, 8, 8), dtype=np.float32)
 
         for square in chess.SQUARES:
             piece = board.piece_at(square)
@@ -96,10 +96,7 @@ class GameSnapshotsDataset(Dataset):
                 if not piece.color:  # Black
                     piece_idx += 6
 
-                tensor[rank, file, piece_idx] = 1.0
-
-        # flatten tensor
-        tensor = tensor.reshape(8 * 8 * 12)  # type: ignore[assignment]
+                tensor[piece_idx, rank, file] = 1.0
 
         return torch.from_numpy(tensor)
 
@@ -177,6 +174,8 @@ class GameSnapshotsDataset(Dataset):
             move = board.parse_san(move_san)
             move_index = self.legal_moves.get_index_from_move(board.uci(move))
 
+            if move_index == -1:
+                return 0
             return move_index
 
         except (ValueError, AssertionError):
@@ -239,6 +238,6 @@ class GameSnapshotsDataset(Dataset):
         board = self.fen_to_tensor(data["fen"])
 
         # combine to 1d tensor
-        labels = torch.cat((elos, turn, board), 0)
+        metadata = torch.cat((elos, turn), 0)
 
-        return labels, chosen_move
+        return (board, metadata), chosen_move
