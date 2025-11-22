@@ -1,3 +1,4 @@
+import torch
 from torch import nn
 
 
@@ -5,9 +6,23 @@ class NeuralNetwork(nn.Module):
     def __init__(self):
         super().__init__()
 
-        # this is identical to the stock fish -engineered features
-        self.shared = nn.Sequential(
-            nn.Linear(772, 512),
+        self.convolution = nn.Sequential(
+            nn.Conv2d(12, 64, kernel_size=8, stride=1, padding="same"),
+            nn.ReLU(),
+            nn.Conv2d(64, 64, kernel_size=8, stride=1, padding="same"),
+            nn.ReLU(),
+            nn.Conv2d(64, 64, kernel_size=8, stride=1, padding="same"),
+            nn.ReLU(),
+            nn.Conv2d(64, 64, kernel_size=8, stride=1, padding="same"),
+            nn.ReLU(),
+            nn.Conv2d(64, 64, kernel_size=8, stride=1, padding="same"),
+            nn.ReLU(),
+            nn.Conv2d(64, 64, kernel_size=8, stride=1, padding="same"),
+            nn.ReLU(),
+        )
+
+        self.fully_connected = nn.Sequential(
+            nn.Linear(4100, 512),
             nn.ReLU(),
             nn.Linear(512, 32),
             nn.ReLU(),
@@ -19,12 +34,15 @@ class NeuralNetwork(nn.Module):
             nn.ReLU(),
             nn.Linear(32, 32),
             nn.ReLU(),
-            nn.Linear(32, 32),
         )
 
         # here we split into two heads to handle move and promote predictions separately
         self.move_head = nn.Sequential(nn.Linear(32, 2104), nn.Softmax(dim=1))
 
-    def forward(self, x):
-        shared_output = self.shared(x)
+    def forward(self, metadata: torch.Tensor, board: torch.Tensor):
+        board = self.convolution(board)
+        board = torch.flatten(board, 1)
+
+        x = torch.cat((board, metadata), dim=1)
+        shared_output = self.fully_connected(x)
         return self.move_head(shared_output)
