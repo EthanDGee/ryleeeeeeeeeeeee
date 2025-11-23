@@ -189,6 +189,19 @@ class GameSnapshotsDataset(Dataset):
             # If move parsing fails, return zeros
             return 0
 
+    def _encode_valid_moves(self, fen: str) -> torch.Tensor:
+        """Encode all legal moves for a given position."""
+        board = chess.Board(fen)
+
+        valid_moves = list(board.legal_moves)
+
+        moves_tensor = torch.zeros(len(self.legal_moves), dtype=torch.float32)
+
+        for move in valid_moves:
+            moves_tensor[self.legal_moves.get_index_from_move(board.uci(move))] = 1.0
+
+        return moves_tensor
+
     def __len__(self) -> int:
         """Return the number of samples in the dataset."""
         return self.num_indexes
@@ -207,11 +220,13 @@ class GameSnapshotsDataset(Dataset):
     def _encode_row(self, data: dict):
         """Encode a single row of data into tensors."""
         chosen_move = self._encode_move(data["fen"], data["move"])
+        valid_moves = self._encode_valid_moves(data["fen"])
         turn = self.encode_turn(data["turn"])
         elos = self.normalize_elo(data["white_elo"], data["black_elo"])
         board = self.fen_to_tensor(data["fen"])
         metadata = torch.cat((elos, turn), 0)
-        return (board, metadata), chosen_move
+
+        return (board, metadata), (chosen_move, valid_moves)
 
     def __getitems__(self, idxs: list[int]):
         """Get multiple samples from the dataset in a single batch query.
@@ -222,7 +237,7 @@ class GameSnapshotsDataset(Dataset):
             idxs: List of indices to retrieve
 
         Returns:
-            List of tuples, each containing ((board, metadata), chosen_move)
+            List of tuples, each containing ((board, metadata), (chosen_move, valid_moves))
         """
         # Convert to db indices (1-indexed)
         db_idxs = [idx + self.start_index + 1 for idx in idxs]
@@ -234,7 +249,7 @@ class GameSnapshotsDataset(Dataset):
         unprocessed_db_idxs = [db_idx for db_idx in db_idxs if db_idx not in cached]
 
         # Process new rows if any
-        newly_processed: dict[int, tuple[torch.Tensor, torch.Tensor, int]] = {}
+        newly_processed: dict[int, tuple[torch.Tensor, torch.Tensor, int, torch.Tensor]] = {}
         if unprocessed_db_idxs:
             with sqlite3.connect(self.db_path) as conn:
                 placeholders = ",".join("?" * len(unprocessed_db_idxs))
@@ -264,14 +279,15 @@ class GameSnapshotsDataset(Dataset):
                     "black_elo": row[5] if row[5] is not None else 0,
                     "result": row[6],
                 }
-                (board, metadata), chosen_move = self._encode_row(data)
-                newly_processed[row[0]] = (board, metadata, chosen_move)
+                (board, metadata), (chosen_move, valid_moves) = self._encode_row(data)
+                newly_processed[row[0]] = (board, metadata, chosen_move, valid_moves)
                 to_save.append(
                     (
                         row[0],
                         board.numpy().tobytes(),
                         metadata.numpy().tobytes(),
                         chosen_move,
+                        valid_moves.numpy().tobytes(),
                     )
                 )
 
@@ -283,15 +299,18 @@ class GameSnapshotsDataset(Dataset):
         for db_idx in db_idxs:
             if db_idx in cached:
                 # Deserialize from cache
-                board_bytes, metadata_bytes, chosen_move = cached[db_idx]
+                board_bytes, metadata_bytes, chosen_move, valid_moves_bytes = cached[db_idx]
                 board = torch.from_numpy(
                     np.frombuffer(board_bytes, dtype=np.float32).reshape(12, 8, 8).copy()
                 )
                 metadata = torch.from_numpy(np.frombuffer(metadata_bytes, dtype=np.float32).copy())
-                results.append(((board, metadata), chosen_move))
+                valid_moves = torch.from_numpy(
+                    np.frombuffer(valid_moves_bytes, dtype=np.float32).copy()
+                )
+                results.append(((board, metadata), (chosen_move, valid_moves)))
             elif db_idx in newly_processed:
-                board, metadata, chosen_move = newly_processed[db_idx]
-                results.append(((board, metadata), chosen_move))
+                board, metadata, chosen_move, valid_moves = newly_processed[db_idx]
+                results.append(((board, metadata), (chosen_move, valid_moves)))
             else:
                 raise IndexError(f"No row at db index {db_idx}.")
 
