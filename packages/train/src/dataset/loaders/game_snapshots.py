@@ -198,7 +198,9 @@ class GameSnapshotsDataset(Dataset):
         moves_tensor = torch.zeros(len(self.legal_moves), dtype=torch.float32)
 
         for move in valid_moves:
-            moves_tensor[self.legal_moves.get_index_from_move(board.uci(move))] = 1.0
+            idx = self.legal_moves.get_index_from_move(board.uci(move))
+            if idx >= 0:
+                moves_tensor[idx] = 1.0
 
         return moves_tensor
 
