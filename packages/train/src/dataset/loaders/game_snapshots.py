@@ -10,7 +10,12 @@ from torch.utils.data import Dataset
 
 from packages.train.src.constants import DB_FILE
 from packages.train.src.dataset.loaders.legal_moves import LegalMovesDataset
+from packages.train.src.dataset.repositories.database import initialize_database
 from packages.train.src.dataset.repositories.game_snapshots import count_snapshots
+from packages.train.src.dataset.repositories.processed_snapshots import (
+    get_processed_snapshots,
+    save_processed_snapshots,
+)
 
 
 class GameSnapshotsDataset(Dataset):
@@ -64,6 +69,8 @@ class GameSnapshotsDataset(Dataset):
         self.db_path = str(db_path) if db_path else DB_FILE
 
         self.legal_moves = LegalMovesDataset()
+
+        initialize_database()
 
     @staticmethod
     def fen_to_tensor(fen: str) -> torch.Tensor:
@@ -191,7 +198,9 @@ class GameSnapshotsDataset(Dataset):
         moves_tensor = torch.zeros(len(self.legal_moves), dtype=torch.float32)
 
         for move in valid_moves:
-            moves_tensor[self.legal_moves.get_index_from_move(board.uci(move))] = 1.0
+            idx = self.legal_moves.get_index_from_move(board.uci(move))
+            if idx >= 0:
+                moves_tensor[idx] = 1.0
 
         return moves_tensor
 
@@ -206,52 +215,105 @@ class GameSnapshotsDataset(Dataset):
             idx: Index of sample to retrieve
 
         Returns:
-            Dictionary containing encoded tensors ready for training
+            Tuple of ((board, metadata), chosen_move)
         """
-        # to avoid the off by one error caused by the database starting at 1
-        idx += self.start_index + 1
+        return self.__getitems__([idx])[0]
 
-        # retrieve index from the database slice with JOIN to game_statistics
-        with sqlite3.connect(self.db_path) as conn:
-            query = """
-                    SELECT gs.fen,
-                           gs.move,
-                           gs.turn,
-                           gst.white_elo,
-                           gst.black_elo,
-                           gst.result
-                    FROM game_snapshots gs
-                             JOIN game_statistics gst ON gs.raw_game_id = gst.raw_game_id
-                    WHERE gs.id = ? \
-                    """
-            cur = conn.cursor()
-            row = cur.execute(query, (idx,)).fetchone()
-            if row is None:
-                raise IndexError(f"No row at offset {self.start_index + idx}.")
-            # convert query to dict
-            data = {
-                "fen": row[0],
-                "move": row[1],
-                "turn": row[2],
-                "white_elo": row[3] if row[3] is not None else 0,
-                "black_elo": row[4] if row[4] is not None else 0,
-                "result": row[5],
-            }
-
-        # Encode all features
-
-        # _encode_move
+    def _encode_row(self, data: dict):
+        """Encode a single row of data into tensors."""
         chosen_move = self._encode_move(data["fen"], data["move"])
         valid_moves = self._encode_valid_moves(data["fen"])
         turn = self.encode_turn(data["turn"])
-
-        # elos
         elos = self.normalize_elo(data["white_elo"], data["black_elo"])
-
-        # board
         board = self.fen_to_tensor(data["fen"])
-
-        # combine to 1d tensor
         metadata = torch.cat((elos, turn), 0)
 
         return (board, metadata), (chosen_move, valid_moves)
+
+    def __getitems__(self, idxs: list[int]):
+        """Get multiple samples from the dataset in a single batch query.
+
+        Uses cache for already-processed rows, only processes new rows once.
+
+        Args:
+            idxs: List of indices to retrieve
+
+        Returns:
+            List of tuples, each containing ((board, metadata), (chosen_move, valid_moves))
+        """
+        # Convert to db indices (1-indexed)
+        db_idxs = [idx + self.start_index + 1 for idx in idxs]
+
+        # Check cache for already-processed rows
+        cached = get_processed_snapshots(db_idxs)
+
+        # Find which rows need processing
+        unprocessed_db_idxs = [db_idx for db_idx in db_idxs if db_idx not in cached]
+
+        # Process new rows if any
+        newly_processed: dict[int, tuple[torch.Tensor, torch.Tensor, int, torch.Tensor]] = {}
+        if unprocessed_db_idxs:
+            with sqlite3.connect(self.db_path) as conn:
+                placeholders = ",".join("?" * len(unprocessed_db_idxs))
+                query = f"""
+                        SELECT gs.id,
+                               gs.fen,
+                               gs.move,
+                               gs.turn,
+                               gst.white_elo,
+                               gst.black_elo,
+                               gst.result
+                        FROM game_snapshots gs
+                                 JOIN game_statistics gst ON gs.raw_game_id = gst.raw_game_id
+                        WHERE gs.id IN ({placeholders})
+                        """
+                cur = conn.cursor()
+                rows = cur.execute(query, unprocessed_db_idxs).fetchall()
+
+            # Encode and collect data for cache
+            to_save = []
+            for row in rows:
+                data = {
+                    "fen": row[1],
+                    "move": row[2],
+                    "turn": row[3],
+                    "white_elo": row[4] if row[4] is not None else 0,
+                    "black_elo": row[5] if row[5] is not None else 0,
+                    "result": row[6],
+                }
+                (board, metadata), (chosen_move, valid_moves) = self._encode_row(data)
+                newly_processed[row[0]] = (board, metadata, chosen_move, valid_moves)
+                to_save.append(
+                    (
+                        row[0],
+                        board.numpy().tobytes(),
+                        metadata.numpy().tobytes(),
+                        chosen_move,
+                        valid_moves.numpy().tobytes(),
+                    )
+                )
+
+            # Save to cache
+            save_processed_snapshots(to_save)
+
+        # Build results in original order
+        results = []
+        for db_idx in db_idxs:
+            if db_idx in cached:
+                # Deserialize from cache
+                board_bytes, metadata_bytes, chosen_move, valid_moves_bytes = cached[db_idx]
+                board = torch.from_numpy(
+                    np.frombuffer(board_bytes, dtype=np.float32).reshape(12, 8, 8).copy()
+                )
+                metadata = torch.from_numpy(np.frombuffer(metadata_bytes, dtype=np.float32).copy())
+                valid_moves = torch.from_numpy(
+                    np.frombuffer(valid_moves_bytes, dtype=np.float32).copy()
+                )
+                results.append(((board, metadata), (chosen_move, valid_moves)))
+            elif db_idx in newly_processed:
+                board, metadata, chosen_move, valid_moves = newly_processed[db_idx]
+                results.append(((board, metadata), (chosen_move, valid_moves)))
+            else:
+                raise IndexError(f"No row at db index {db_idx}.")
+
+        return results

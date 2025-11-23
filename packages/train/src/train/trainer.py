@@ -56,6 +56,7 @@ class Trainer:
         # Model
         self.model = model
         self.criterion = nn.CrossEntropyLoss()
+        self.valid_moves_criterion = nn.BCEWithLogitsLoss()
 
         # stable parameters
         self.num_epochs: int = hyperparameters["num_epochs"]
@@ -88,6 +89,7 @@ class Trainer:
         # Move model and criterion to the device
         self.model.to(self.device)
         self.criterion = self.criterion.to(self.device)
+        self.valid_moves_criterion = self.valid_moves_criterion.to(self.device)
 
         fill_database_with_snapshots(
             snapshots_threshold=total_instances, max_size_gb=database_info["max_size_gb"]
@@ -191,7 +193,7 @@ class Trainer:
 
                 # calculate loss
                 move_loss = self.criterion(predicted_chosen, chosen_move)
-                valid_loss = self.criterion(predicted_valid, valid_moves)
+                valid_loss = self.valid_moves_criterion(predicted_valid, valid_moves)
                 loss = move_loss + valid_loss
 
                 loss.backward()
