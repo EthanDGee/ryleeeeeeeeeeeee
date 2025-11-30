@@ -1,6 +1,7 @@
 import os
 import random
 import time
+from copy import deepcopy
 
 import torch
 from torch import nn
@@ -15,6 +16,7 @@ from packages.train.src.constants import (
 )
 from packages.train.src.dataset.loaders.game_snapshots import GameSnapshotsDataset
 from packages.train.src.dataset.pipeline import pipeline
+from packages.train.src.models.neural_network import NeuralNetwork
 
 
 def make_directory(directory_name):
@@ -39,22 +41,17 @@ class Trainer:
     hyperparameter tuning, model training, evaluation, and checkpointing.
     """
 
-    def __init__(self, values: dict, model):
+    def __init__(self, values: dict, base_model: NeuralNetwork = NeuralNetwork()):
         """
         Initializes the Trainer object.
 
         Args:
             values (dict): A dictionary containing hyperparameters, database information, and checkpoint settings.
-            model: The PyTorch model to be trained.
+            base_model: The PyTorch model to be trained.
         """
         hyperparameters = values["hyperparameters"]
         database_info = values["database_info"]
         checkpoints = values["checkpoints"]
-
-        # Model
-        self.model = model
-        self.criterion = nn.CrossEntropyLoss()
-        self.valid_criterion = nn.BCEWithLogitsLoss()
 
         # stable parameters
         self.num_epochs: int = hyperparameters["num_epochs"]
@@ -84,10 +81,13 @@ class Trainer:
         # Select device
         self.device = torch.device("cuda" if self.cuda_enabled else "cpu")
 
-        # Move model and criterion to the device
-        self.model.to(self.device)
-        self.criterion = self.criterion.to(self.device)
-        self.valid_criterion = self.valid_criterion.to(self.device)
+        # Model
+        self.base_model = base_model
+        self._reset_model()
+        self.move_criterion = nn.CrossEntropyLoss()
+        self.legal_criterion = nn.BCEWithLogitsLoss()
+        self.move_criterion = self.move_criterion.to(self.device)
+        self.legal_criterion = self.legal_criterion.to(self.device)
 
         pipeline(total_instances, database_info["max_size_gb"])
 
@@ -152,12 +152,19 @@ class Trainer:
 
         self.model_name = updated_name
 
+    def _reset_model(self):
+        self.model = deepcopy(self.base_model)
+        self.model.to(self.device)
+
     def train(self):
         """
         Trains the model using the current hyperparameters, saving the model periodically
         to a checkpoint directory based on self.auto_save_interval, as well as training
         information, before saving the final model.
         """
+
+        self._reset_model()
+
         # Define loss function and optimizer
         optimizer = Adam(
             self.model.parameters(),
@@ -174,7 +181,7 @@ class Trainer:
         for epoch in range(self.num_epochs):
             self.model.train()
 
-            for _batch, ((board, metadata), (chosen_move, valid_moves)) in enumerate(
+            for _batch, ((board, metadata), (chosen_move, legal_moves)) in enumerate(
                 self.train_dataloader
             ):
                 # batch_x is a tuple (metadata, board), need to handle each component
@@ -182,15 +189,15 @@ class Trainer:
                 metadata = metadata.to(self.device, non_blocking=non_blocking)
                 board = board.to(self.device, non_blocking=non_blocking)
                 chosen_move = chosen_move.to(self.device, non_blocking=non_blocking)
-                valid_moves = valid_moves.to(self.device, non_blocking=non_blocking).float()
+                legal_moves = legal_moves.to(self.device, non_blocking=non_blocking).float()
 
                 optimizer.zero_grad()
                 predicted_chosen, predicted_valid = self.model(metadata, board)
 
                 # calculate loss
-                move_loss = self.criterion(predicted_chosen, chosen_move)
-                valid_loss = self.valid_criterion(predicted_valid, valid_moves)
-                loss = move_loss + valid_loss
+                move_loss = self.move_criterion(predicted_chosen, chosen_move)
+                legal_loss = self.legal_criterion(predicted_valid, legal_moves)
+                loss = move_loss + legal_loss
 
                 # calculate accuracy
                 _, predicted_move_indices = torch.max(predicted_chosen.data, 1)
@@ -198,17 +205,19 @@ class Trainer:
                     (predicted_move_indices == chosen_move).sum().item() / chosen_move.size(0)
                 ) * 100
 
-                valid_preds = (torch.sigmoid(predicted_valid) > 0.5).float()
-                valid_accuracy = (
-                    (valid_preds == valid_moves).sum().item() / valid_moves.numel()
+                legal_preds = (torch.sigmoid(predicted_valid) > 0.5).float()
+                legal_accuracy = (
+                    (legal_preds == legal_moves).sum().item() / legal_moves.numel()
                 ) * 100
+                average_move_loss = move_loss.item() / self.batch_size
+                average_legal_loss = legal_loss.item() / self.batch_size
 
                 print(
-                    f"Total Loss: {loss.item():.4f} | "
-                    f"Move Loss: {move_loss.item():.4f} | "
+                    f"Total Loss: {average_move_loss + average_legal_loss:.8f} | "
+                    f"Move Loss: {average_move_loss:.8f} | "
                     f"Move Acc: {move_accuracy:.2f}% | "
-                    f"Legal Loss: {valid_loss.item():.4f} | "
-                    f"Legal Acc: {valid_accuracy:.2f}%"
+                    f"Legal Loss: {average_legal_loss:.8f} | "
+                    f"Legal Acc: {legal_accuracy:.2f}%"
                 )
 
                 loss.backward()
@@ -248,7 +257,7 @@ class Trainer:
 
                 predicted_moves, _ = self.model(metadata, board)
 
-                move_loss = self.criterion(predicted_moves, chosen_move)
+                move_loss = self.move_criterion(predicted_moves, chosen_move)
                 loss = move_loss
                 total_loss += loss.item()
 

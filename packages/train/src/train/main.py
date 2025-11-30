@@ -2,6 +2,8 @@ import json
 import os
 import sys
 
+import torch
+
 from packages.train.src.models.neural_network import NeuralNetwork
 from packages.train.src.train.trainer import Trainer
 
@@ -27,17 +29,29 @@ def load_config(path: str):
 
 
 def main():
-    # If user provides a path, use it. Otherwise fall back to default.
-    if len(sys.argv) == 2:
-        config_path = sys.argv[1]
-    else:
+    # If user provides a path, use it. Other wise fall back to default.
+    if len(sys.argv) <= 1:
         print(f"No config path provided, using default: {DEFAULT_CONFIG_PATH}")
         config_path = DEFAULT_CONFIG_PATH
+    else:
+        config_path = sys.argv[1]
 
     config = load_config(config_path)
 
-    neural_network = NeuralNetwork()
-    trainer = Trainer(config, neural_network)
+    starting_model = NeuralNetwork()
+
+    # load a user specified model as the starting point for further training
+    if len(sys.argv) > 2:
+        print("Loading base model...")
+        base_model_path = sys.argv[2]
+        map_location = torch.device("cuda") if config["cuda_enabled"] else torch.device("cpu")
+
+        starting_model.load_state_dict(
+            torch.load(base_model_path, weights_only=True, map_location=map_location)
+        )
+        print(f"Successfully loaded {base_model_path}")
+
+    trainer = Trainer(config, starting_model)
 
     trainer.random_search(config["num_iterations"])
 

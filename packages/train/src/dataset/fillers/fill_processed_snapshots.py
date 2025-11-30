@@ -1,20 +1,26 @@
 """Filler script to populate the processed_snapshots table with encoded data."""
 
-from packages.train.src.constants import DEFAULT_BATCH_SIZE, DEFAULT_PRINT_INTERVAL
+from packages.train.src.constants import (
+    DEFAULT_BATCH_SIZE,
+    DEFAULT_PRINT_INTERVAL,
+    DEFAULT_SNAPSHOTS_THRESHOLD,
+)
 from packages.train.src.dataset.processers.processed_snapshots import ProcessedSnapshotsProcessor
 from packages.train.src.dataset.repositories.database import initialize_database
-from packages.train.src.dataset.repositories.game_snapshots import count_snapshots
+from packages.train.src.dataset.repositories.game_snapshots import (
+    count_snapshots,
+    get_snapshots_batch,
+)
 from packages.train.src.dataset.repositories.processed_snapshots import (
     count_processed_snapshots,
     save_processed_snapshots,
 )
-from packages.train.src.dataset.repositories.raw_games import get_raw_snapshots_batch
 
 
 def fill_processed_snapshots(
     batch_size: int = DEFAULT_BATCH_SIZE,
     print_interval: int = DEFAULT_PRINT_INTERVAL,
-    max_snapshots: int | None = None,
+    max_snapshots: int | None = DEFAULT_SNAPSHOTS_THRESHOLD,
 ):
     """Process raw game snapshots and populate the processed_snapshots table.
 
@@ -50,7 +56,7 @@ def fill_processed_snapshots(
 
     # Process in batches
     while offset < target_snapshots:
-        rows = get_raw_snapshots_batch(offset, batch_size)
+        rows = get_snapshots_batch(offset, batch_size)
 
         if not rows:
             break

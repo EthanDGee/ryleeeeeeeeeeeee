@@ -94,7 +94,7 @@ def mock_trainer(mock_values, tmp_path):
 
 @patch("packages.train.src.train.trainer.Trainer.train")
 @patch("packages.train.src.train.trainer.Trainer._save_model")
-@patch("packages.train.src.train.trainer.Trainer._dataset_loss", return_value=(0.1, 95.0))
+@patch("packages.train.src.train.trainer.Trainer._dataset_loss", return_value=(0.1, 95.0, 99.0))
 @patch("packages.train.src.train.trainer.make_directory")
 def test_random_search(mock_mkdir, mock_dataset_loss, mock_save, mock_train, mock_trainer):
     """Tests the random_search method."""
@@ -109,13 +109,13 @@ def test_random_search(mock_mkdir, mock_dataset_loss, mock_save, mock_train, moc
                 mock_trainer.current_beta = 0.95
                 mock_trainer.current_momentum = 0.999
                 # Make validation loss different for each run
-                mock_dataset_loss.return_value = (0.2, 90.0)
+                mock_dataset_loss.return_value = (0.2, 90.0, 98.0)
             else:
                 mock_trainer.current_lr = 0.001
                 mock_trainer.current_decay_rate = 0.0001
                 mock_trainer.current_beta = 0.9
                 mock_trainer.current_momentum = 0.99
-                mock_dataset_loss.return_value = (0.1, 95.0)  # Better loss
+                mock_dataset_loss.return_value = (0.1, 95.0, 99.5)  # Better loss
 
         mock_random_hyper.side_effect = side_effect
         mock_trainer.random_search(iterations)

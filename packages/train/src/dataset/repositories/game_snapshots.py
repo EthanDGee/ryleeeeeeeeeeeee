@@ -126,6 +126,33 @@ def count_snapshots() -> int:
     return count
 
 
+def get_snapshots_batch(offset: int, batch_size: int) -> list[tuple]:
+    """Fetch a batch of snapshots joined with game statistics."""
+    with sqlite3.connect(DB_FILE) as conn:
+        c = conn.cursor()
+        c.execute(
+            """
+            SELECT
+                gs.id,
+                gs.fen,
+                gs.move,
+                gs.turn,
+                gst.white_elo,
+                gst.black_elo,
+                gst.result
+            FROM
+                game_snapshots gs
+            JOIN
+                game_statistics gst ON gs.raw_game_id = gst.raw_game_id
+            ORDER BY
+                gs.id
+            LIMIT ? OFFSET ?
+            """,
+            (batch_size, offset),
+        )
+        return c.fetchall()
+
+
 def _row_to_snapshot(row: tuple) -> GameSnapshot:
     """Convert a DB row to a GameSnapshot object."""
     return GameSnapshot(
