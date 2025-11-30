@@ -68,6 +68,18 @@ style: |
   }
 ---
 
+<!-- TODO: OVERALL PRESENTATION REQUIREMENTS:
+     - Time limit: 10-12 minutes total
+     - Practice timing to ensure you cover all sections properly
+     - Add references slide at the end (before Questions slide) citing:
+       * Maia paper
+       * Lichess database
+       * Any other sources used
+     - Verify all font sizes are readable (current styling looks good)
+     - Ensure all figures/charts are visible when presenting
+     - Check that bullet points are concise and well-summarized
+-->
+
 <!-- _class: lead -->
 
 # Rylee
@@ -95,7 +107,7 @@ style: |
 
 **Rylee** - All the above AND
 - Maia is a **large complex model** that takes a **lots of compute power** to train and run
-- Goal: Get about the **same accuracy** but train and run on a **raspberry pi** 😎
+- Goal: Get about the **same accuracy** but train and run on a **raspberry pi**
 
 ---
 
@@ -127,11 +139,24 @@ Train on millions of human chess positions to predict the next move.
 
 # Methodology - Theories
 
-
+<!-- TODO: Add content about:
+     - Theoretical foundations (supervised learning, CNNs for spatial pattern recognition)
+     - Why CNNs work for chess (spatial relationships on board)
+     - Why neural networks can model human decision-making vs optimal play
+     - Trade-offs between model size and performance (why small model can work)
+     - Connection to Maia's approach and how you differ
+-->
 
 ---
 
 # Methodology - ML Models
+
+<!-- TODO: Consider adding visual diagrams:
+     - Architecture diagram showing network flow
+     - Data pipeline flowchart (more detailed than proposed solution slide)
+     - Sample chess board encoding visualization
+     - These visuals improve "figure visibility" in grading criteria
+-->
 
 <div class="columns">
 <div>
@@ -208,9 +233,23 @@ Train on millions of human chess positions to predict the next move.
 
 # Experiments - Evaluation Metrics
 
-- **Top-1 Accuracy**: Predicted move = actual move
+<!-- TODO: Add more evaluation metrics:
+     - Consider adding: perplexity, move ranking metrics, or accuracy by game phase
+     - Explain why these metrics are appropriate for human move prediction
+-->
+
+- **Top-1 Accuracy**: Predicted move is the actual move
+- **Top-5 Accuracy**: Predicted move is one of the top predicted moves
 
 # Experiments - Comparisons
+
+<!-- TODO: Consider enhancing comparisons:
+     - Add visualization (bar chart or graph comparing methods)
+     - Include error bars or confidence intervals if available
+     - Add more metrics beyond Top-1 (Top-5, Top-10?)
+     - Discuss statistical significance of differences
+     - Add comparison of model sizes/computational requirements
+-->
 
 | Method            | Top-1 Accuracy |
 |-------------------|----------------|
@@ -219,18 +258,28 @@ Train on millions of human chess positions to predict the next move.
 | **Stockfish 15**  | **40%**        |
 | **Leela 4200**    | **44%**        |
 | **Maia1 1500**    | **51%**        |
-| **Rylee (Ours)**  | **46%**        |
+| **Rylee (Ours)**  | **20%**        |
 
 ---
 
 # Conclusions - Discussions
 
+<!-- TODO:
+     - Add discussion of what these numbers mean
+     - Discuss why Rylee achieves 20% vs Maia's 51%
+     - Discuss model size trade-offs (Raspberry Pi vs full GPU)
+     - Add insights about what worked and what didn't
+     - Consider adding: training time, model size comparison, inference speed
+-->
+
 | Metric          | Value  |
 |-----------------|--------|
-| Training Loss   | [TODO] |
-| Validation Loss | [TODO] |
-| Top-1 Accuracy  | [TODO] |
-| Top-5 Accuracy  | [TODO] |
+| Training Loss   | 0.0152 |
+| Training Top-1 Accuracy  | 21.8578 |
+| Training Top-5 Accuracy  | 47.1662 |
+| Validation Loss | 0.0164 |
+| Validation Top-1 Accuracy  | 19.4929 |
+| Validation Top-5 Accuracy  | 43.1566 |
 
 ---
 
@@ -244,6 +293,20 @@ Train on millions of human chess positions to predict the next move.
 - Human vs Bot discriminator
 - GAN implementation
 - Blunder detection
+
+---
+
+# References
+
+<!-- TODO: ADD REFERENCES SLIDE HERE:
+     Required for "references used" in grading criteria. Include:
+     - Maia Chess: https://maiachess.com/ and the Maia paper
+     - Lichess Open Database: https://database.lichess.org/
+     - Stockfish: https://stockfishchess.org/
+     - Leela Chess Zero: https://lczero.org/
+     - Any papers, frameworks, or tools you referenced
+     Format as a proper references slide with citations
+-->
 
 ---
 

@@ -1,6 +1,17 @@
 \documentclass[conference]{IEEEtran}
 \IEEEoverridecommandlockouts
 
+% ============================================================================
+% OVERALL DOCUMENT TODOS - CHECK BEFORE SUBMISSION
+% ============================================================================
+% TODO: Verify page count is ~4 pages without references (up to 6 acceptable, must be >2 and <10)
+% TODO: Proofread entire document for grammatical mistakes
+% TODO: Check all figures are readable and fonts are clear in the PDF
+% TODO: Remove unnecessary white spaces throughout
+% TODO: Ensure GitHub repository is public and has README with execution instructions
+% TODO: Verify all inline TODOs in abstract, baseline, experiments, and conclusion are filled in
+% ============================================================================
+
 \usepackage{cite}
 \usepackage{amsmath,amssymb,amsfonts}
 \usepackage{graphicx}
@@ -22,7 +33,9 @@ ethan.gee@usu.edu, nate.stott@usu.edu}
 
 \begin{abstract}
 Artificial Intelligence (AI) has surpassed human performance in many domains; since 2005, chess engines have demonstrated consistent superhuman play. While human-aligned AI has proven beneficial, fields such as law, medicine, and human resources cannot directly deploy superhuman AI due to ethical constraints. These limitations, however, do not preclude the use of AI systems designed to complement---rather than exceed---human performance. Prior work shows that aligning with human-observable behavior, instead of explaining behavior, can yield desirable results. Chess provides a strong testbed for developing such systems.
-Rylee is a neural-network-based chess engine trained to mimic human move selection, aiming for lightweight computation and modest predictive accuracy. Traditional chess engines, optimized for perfect play, offer limited value as human training tools, and attempts to attenuate them fail to capture human-like behavior. Maia improves on this but requires substantial compute to train and run. This work builds on Maia by developing a more computationally efficient, human-aligned model---comparable in size to Stockfish and capable of running on standard hardware. Trained on large Lichess datasets across multiple rating levels, Rylee learns to predict human moves with fidelity. Key results show that TODO and experiments demonstrate that TODO. The broader significance of this research lies in advancing human-aligned AI and enabling more accessible, engaging AI-based training systems across diverse domains.
+Rylee is a neural-network-based chess engine trained to mimic human move selection, aiming for lightweight computation and modest predictive accuracy. Traditional chess engines, optimized for perfect play, offer limited value as human training tools, and attempts to attenuate them fail to capture human-like behavior. Maia improves on this but requires substantial compute to train and run. This work builds on Maia by developing a more computationally efficient, human-aligned model---comparable in size to Stockfish and capable of running on standard hardware. Trained on large Lichess datasets across multiple rating levels, Rylee learns to predict human moves with fidelity. % TODO: Fill in key results (e.g., accuracy percentages, move prediction rates)
+Key results show that TODO and experiments demonstrate that TODO. % TODO: Fill in experimental demonstration results
+The broader significance of this research lies in advancing human-aligned AI and enabling more accessible, engaging AI-based training systems across diverse domains.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -53,6 +66,10 @@ Maia, specifically designed for human-like play, employs a modified version of L
 While the pursuit of optimal play has been the primary focus of chess engine development, there is a growing interest in creating AI that plays in a more human-like manner. The Maia project, by McIlroy-Young et al., represents a significant step in this direction. Instead of using reinforcement learning to find the best possible move, Maia is trained on a large dataset of human games to predict the move a human player would make in a given position. This supervised learning approach results in an engine that exhibits more human-like characteristics, including making mistakes that are typical of human players at a certain skill levels instead of the always the optimal move. Importantly, the model is never required to intentionally choose a sub-optimal move. Because the task is reframed as predicting the move a human would make, the notion of an ``optimal'' move in the traditional engine sense no longer applies. This leads to experiences humans can easily learn from.
 
 \subsection{Dataset and Training Data}
+
+% TODO: Consider if this subsection is redundant with "Dataset Description" in Experiments section (line 158)
+% TODO: If keeping both, make sure Related Work focuses on dataset characteristics/prior work,
+%       while Experiments section focuses on YOUR specific dataset choices and processing
 
 The Lichess database is a massive, publicly available collection of chess games played on the Lichess.org platform. It contains billions of games played by humans of all skill levels, making it an invaluable resource for training human-like chess models. The games are stored in the Portable Game Notation (PGN) format, which includes the moves of the game, the players' ratings (Elo), the game's outcome and other statistics.
 
@@ -204,9 +221,23 @@ Data processing pipeline:
 
 \subsection{Baseline Description}
 
+% TODO: Add baseline model descriptions - this section needs to describe what you're comparing against
+% TODO: Include baseline performance metrics (e.g., Maia accuracy, Stockfish with handicaps, random move selection)
+% TODO: Describe evaluation metrics used for comparison (accuracy, perplexity, move-matching rate)
+% TODO: This section is worth 7% of the grade - needs substantial content beyond just the GitHub link
+
 All of the source code for this project is a available at \url{https://github.com/EthanDGee/ryleeeeeeeeeeeee}
 
 \subsection{Experimental Evaluation}
+
+% TODO: This section is worth 10% of the grade - needs comprehensive content with visualizations
+% TODO: Add training curves (loss over epochs, accuracy over epochs)
+% TODO: Add comparison tables (Rylee vs Maia vs baselines)
+% TODO: Include move prediction accuracy by ELO range
+% TODO: Add sample games or positions where Rylee made human-like vs superhuman choices
+% TODO: Include computational performance metrics (inference time, memory usage)
+% TODO: Add statistical significance tests if applicable
+% TODO: Include at least 2-3 figures/tables showing experimental results
 
 TODO
 
@@ -214,9 +245,10 @@ TODO
 
 \subsection{Summary}
 
-% TODO: Brief recap of the project
-% TODO: Restate key achievements
-% TODO: Final assessment of success
+% TODO: Brief recap of the project (what you set out to do)
+% TODO: Restate key achievements (what you accomplished - include specific metrics)
+% TODO: Final assessment of success (how well did you meet your goals?)
+% TODO: Mention limitations encountered
 
 \subsection{Future Work}
 
@@ -246,8 +278,9 @@ TODO
 
 \subsection{Concluding Remarks}
 
-% TODO: Final thoughts on the project
-% TODO: Broader context and significance
+% TODO: Final thoughts on the project and what was learned
+% TODO: Broader context and significance (impact on human-aligned AI, chess training, accessibility)
+% TODO: Why this work matters beyond just chess
 
 \begin{thebibliography}{00}
 \bibitem{b1} R. McIlroy-Young, S. Sen, J. Kleinberg, and A. Anderson, ``Aligning Superhuman AI with Human Behavior: Chess as a Model System,'' in Proc. 26th ACM SIGKDD Int. Conf. on Knowledge Discovery and Data Mining (KDD), 2020.
