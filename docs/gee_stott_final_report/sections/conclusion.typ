@@ -1,5 +1,3 @@
-// Conclusion and Future Work section
-
 == Summary
 
 // TODO: Brief recap of the project

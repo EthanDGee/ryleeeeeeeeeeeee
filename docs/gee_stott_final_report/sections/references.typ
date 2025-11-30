@@ -1,5 +1,3 @@
-= References
-
 [1] R. McIlroy-Young, S. Sen, J. Kleinberg, and A. Anderson, "Aligning Superhuman AI with Human Behavior: Chess as a Model System," in Proc. 26th ACM SIGKDD Int. Conf. on Knowledge Discovery and Data Mining (KDD), 2020.
 
 [2] D. Silver et al., "Mastering the game of Go with deep neural networks and tree search," Nature, vol. 529, pp. 484–489, 2016.
@@ -17,3 +15,9 @@
 [8] A. Paszke et al., "PyTorch: An Imperative Style, High-Performance Deep Learning Library," in Advances in Neural Information Processing Systems 32, H. Wallach, H. Larochelle, A. Beygelzimer, F. d'Alché-Buc, E. Fox, and R. Garnett, Eds. Curran Associates, Inc., 2019, pp. 8024–8035.
 
 [9] N. Moskopp, "python-chess: a chess library for Python," GitHub repository, 2014. [Online]. Available: https://github.com/niklasf/python-chess
+
+[10] Doshi-Velez, F., & Kim, B. (2017). A Roadmap for a Rigorous Science of Interpretability. ArXiv, abs/1702.08608.
+
+[11] Stadie, B. C., Abbeel, P., & Sutskever, I. (2017). Third-person imitation learning. arXiv preprint arXiv:1703.01703.
+
+[12] Charness, N. The impact of chess research on cognitive science. Psychol. Res 54, 4–9 (1992). https://doi.org/10.1007/BF01359217

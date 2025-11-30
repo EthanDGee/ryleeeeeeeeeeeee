@@ -1,10 +1,6 @@
-// Methodology section
-
 == System Architecture
 
-// TODO: Data flow between components
-// TODO: Design decisions
-We primarily focused on three separate aspects of the human chess bot. Firstly we converted and processed the data into usable chunks, then we trained the model before finally deploying the model into a playable environment.
+We structured our work on the chess engine Rylee around three core components: data processing, model training, and deployment into a playable environment. First, we automated the download of Lichess data files and passed them through a preparation pipeline, converting them into standardized, training-ready formats and storing the processed results in a database. During training, the model draws directly from this preprocessed dataset, eliminating the need to re-run the preparation pipeline and allowing us to iterate on model architecture and training configurations efficiently. Finally, the trained model is deployed into an interactive environment where it can be evaluated through live play.
 
 == Data Collection and Processing
 
@@ -13,9 +9,6 @@ We primarily focused on three separate aspects of the human chess bot. Firstly w
 Lichess data is stored in the form of PGN files. PGN or Portable Game Notation is made up of 2 parts the tag pairs, which stores game metadata about the game and players, and the move strings of the game stored in UCI.
 
 To make this data usable we stored the players elos, which is a measure of their skill. Then we iterate through the game storing "snapshots" of the board at every state, and the move taken by the current player at that position. The board states are then represented as 3 dimensional tensors that are 8 by 8 (due to the size of the board) with 12 channels with 6 channels for each of the white pieces and 6 for the black.
-
-// TODO: Explain raw_games, game_snapshots, legal_moves tables
-// TODO: Indexing and optimization decisions
 
 == Neural Network Architecture
 

@@ -1,7 +1,7 @@
 // IEEE Conference Paper Format
 #set document(
-  title: "Human-Chessbot: Training a Neural Network to Play Chess Like a Human",
-  author: "Gee Stott",
+  title: "Rylee: Training a Neural Network to Play Chess Like a Human",
+  author: "Ethan Gee and Nate Stott",
 )
 
 // IEEE uses two-column format for conference papers
@@ -56,20 +56,19 @@
 // Title and author block (IEEE format)
 #set align(center)
 #text(size: 24pt, weight: "bold")[
-  Human-Chessbot: Training a Neural Network \ to Play Chess Like a Human
+  Rylee: Training a Neural Network to Play Chess Like a Human
 ]
 
 #v(1em)
 
 #text(size: 11pt)[
-  Gee Stott\
+  Ethan Gee and Nate Stott\
   #text(size: 10pt, style: "italic")[
-    // TODO: Add institution/affiliation
-    // Department, University
+    Computer Science, Utah State University
   ]\
   #text(size: 10pt)[
-    // TODO: Add email
-    // email\@university.edu
+    ethan.gee\@usu.edu
+    nate.stott\@usu.edu
   ]
 ]
 
@@ -94,7 +93,7 @@
 // Index terms (keywords)
 #par(first-line-indent: 0pt)[
   #text(weight: "bold", style: "italic", size: 9pt)[Index Terms—]
-  #text(size: 9pt)[Chess, Neural Networks, Machine Learning, Human-like AI, Deep Learning]
+  #text(size: 9pt)[Chess, Neural Networks, Machine Learning, Artificial Intelligence, AI, Human-like AI, Deep Learning]
 ]
 
 #v(1.5em)
@@ -104,13 +103,13 @@
 #include "sections/introduction.typ"
 
 = Related Work
-#include "sections/background.typ"
+#include "sections/related_work.typ"
 
 = Proposed Method
 #include "sections/methodology.typ"
 
 = Experiments
-#include "sections/results.typ"
+#include "sections/experiments.typ"
 
 = Conclusion and Future Work
 #include "sections/conclusion.typ"

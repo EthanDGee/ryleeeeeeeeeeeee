@@ -1,5 +1,3 @@
-// Experiments section
-
 == Dataset Description
 
 We trained our model off of 823,000 games from January to May of 2013. These games were played by a wide breadth of players in a variety of states. The original maia model was split into 9 separate models split apart by elo ranges of 100 (e.g. 1100-1200) this limited the models generalizability and so we trained our model on one complete dataset to increase access. Exanding from 1100-1900 to 700-2500 to further increase access.
@@ -45,3 +43,5 @@ Data processing pipeline:
 All of the source code for this project is a available at https://github.com/EthanDGee/ryleeeeeeeeeeeee
 
 == Experimental Evaluation
+
+TODO
