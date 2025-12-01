@@ -256,7 +256,7 @@ We believes we can still maintain similar performance, and add feautures to the 
 A Small model that had a similar architecture to StockFish
 - 8 fully connected layers of 32 neurons
 
-### Convolutional Model 
+### Convolutional Model
 - Combination of Convolution and fully connected to mirror human cognition
 
 ### Convolution with Auxillary Head
@@ -291,7 +291,6 @@ A Small model that had a similar architecture to StockFish
   - Trained on two A100 80Gb GPUs
 
 </div>
-
 <div>
 
 - Rylee has 800,000 parameters vs MAIAs 25 Million
@@ -299,9 +298,17 @@ A Small model that had a similar architecture to StockFish
 - We include games with mixed skill levels to better reflect general human behavior
 - 15,000 games vs. Maia’s 169 million games
 - MAIA was Trained on two A100 80Gb GPUs vs Rylee being trained on a Edge Device
-</div>
 
 </div>
+</div>
+
+---
+
+# Experiments - Deployment
+
+<img src="./figures/chess.gif" width="900">
+
+We have a tkinter gui. Here is it running on a crappy laptop. Black is Rylee and White is Stockfish.
 
 ---
 
