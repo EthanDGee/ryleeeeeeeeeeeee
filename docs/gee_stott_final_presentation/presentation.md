@@ -101,10 +101,10 @@ style: |
 <div>
 
 **Rylee Problems**
-- Maia requires **large GPUs** and a **large model**
+- Maia requires **large GPUs** to run and train
 - Maia can only run on high end machines
 - Maia was not trained to play chess openings
-- **Goal**: Make a practical deployable version of Maia
+- **Goal**: Make a **practical & deployable#** version of Maia
 
 </div>
 </div>
