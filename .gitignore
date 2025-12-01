@@ -116,3 +116,5 @@ temp/
 **/config.json
 charts/
 analysis/
+message.txt
+message.csv
