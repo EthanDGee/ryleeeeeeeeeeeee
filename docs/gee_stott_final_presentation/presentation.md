@@ -92,19 +92,19 @@ style: |
 <div class="columns">
 <div>
 
-**The Maia Problem**
-- Traditional engines play **optimally**, not **humanly**
-- Predicting human moves != finding the best move
-- **Goal**: Predict what a human player would actually choose
+**Maia Problems**
+- Traditional chess engines maximize the chances of winning
+- Predicting a move a human would play does not mean finding the best move
+- **Goal**: Replicate human play
 
 </div>
 <div>
 
-**The Rylee Problem**
-- Maia requires **GPU & large model**
-- Not edge-deployable
-- Missing opening play
-- **Goal**: Human-like play on **edge hardware**
+**Rylee Problems**
+- Maia requires **large GPUs** and a **large model**
+- Maia can only run on high end machines
+- Maia was not trained to play chess openings
+- **Goal**: Make a practical deployable version of Maia
 
 </div>
 </div>
@@ -116,21 +116,21 @@ style: |
 <div class="columns">
 <div>
 
-**Why human-like AI matters**
-- Traditional engines are **too strong** to learn from
-- Handicapping creates **unnatural play**
-- Human-like engines = **realistic training partners**
-- Example: Chess students can practice with Rylee to **experience human-style mistakes and strategies**, improving learning
-- Broader applications: Education, coaching, collaborative decision-making
+**Why human aligned AI matters**
+- Traditional engines play chess differently making it difficult for humans to learn from
+- Attenuating does not **mimic human play**
+- Human aligned engines creates more realistic **training partners**
+- Example: Chess students can practice with Rylee on their school chromebook to advance their chess skills
+- Broader applications: Collaborative decision-making, Education, etc
 
 </div>
 <div>
 
-**Why Rylee extends Maia**
-- **Edge deployment** (Raspberry Pi, Jetson)
-- **Includes openings** (first 10 moves)
-- **Unified model** (700-2500 ELO)
-- **Human-like behavior at all levels** allows consistent training experience
+**How Rylee extends Maia**
+- **Edge deployment** Raspberry Pi, Chromebooks
+- **Includes openings** first 10 moves
+- **No game filtering** include all game types (classical, blitz, etc)
+- **Unified model with a higher range** 700-2500 ELO
 
 </div>
 </div>
@@ -141,36 +141,23 @@ style: |
 
 <img src="./figures/high_level.png" width="1000">
 
-Train on millions of human chess positions to predict human moves using a lightweight CNN.
+1. Pull data from Lichess
+2. Preprocess games
+3. Feed data into NN
+4. Predict moves
 
 ---
 
 # Methodology - Theories
 
-<div class="columns">
-<div>
 
 **Why CNNs work well for chess**
-- Chess patterns are **spatially local** (pawn structures, king safety)
+- Chess boards are **spatially related** (knight is better if its in the middle)
 - CNNs excel at **spatial pattern recognition**
 
 **Model size vs performance**
-- Smaller models enable **edge deployment**
-- Performance doesn't scale linearly with size
-
-</div>
-<div>
-
-**Rylee = Maia**
-- Both predict **human moves** using supervised learning
-
-**Rylee != Maia**
-- **Smaller model** (edge-deployable vs GPU-only)
-- **Includes openings** (first 10 moves)
-- **Unified model** (700-2500 ELO vs 9 separate models)
-
-</div>
-</div>
+- Model size increases performance exponentially
+- We are hoping we can decrease the size of the Maia model while still keeping high accuracy
 
 ---
 
@@ -187,9 +174,9 @@ Train on millions of human chess positions to predict human moves using a lightw
 - **Download** .zst files from Lichess
 - **Extract** PGNs
 - **Split** into individual games
-- **Convert** to board state snapshots
-- **Extract** ELO & result metadata
-- **Encode** as one-hot tensors
+- **Convert** to board snapshots
+- **Extract** ELO and result metadata
+- **Encode** board as 8x8x12 tensors
 
 </div>
 </div>
@@ -206,10 +193,11 @@ Train on millions of human chess positions to predict human moves using a lightw
 </div>
 <div>
 
-- **Input**: Board(12x8x8) + Metadata(4)
-- **Conv Layers**: 6x64 filters @ 8x8, ReLU
+- **Input**: Board(8x8x12) + Metadata(4)
+- **Conv Layers**: 6 64x8x8 filters, ReLU
 - **Fully Connected**: 4100 -> 512 -> 32
 - **Output Heads**: Move (2104) + Auxiliary (2104)
+  - 2104 is the number of legal moves
 - **Loss**: CrossEntropy (moves) + BCE (valid moves)
 - **Optimizer**: Adam
 - **Hyperparameter Search**: Random search
@@ -226,7 +214,7 @@ Train on millions of human chess positions to predict human moves using a lightw
 
 - **Source:** Lichess Open Database
 - **Games:** 15,000 human-rated games
-- **Snapshots:** 1 million board positions
+- **Snapshots:** 1 million board states
   - including openings
   - including all game types
 - **Action Space:** 2,104 legal move classes
@@ -253,10 +241,10 @@ Train on millions of human chess positions to predict human moves using a lightw
 | Method            | Description                      |
 |-------------------|----------------------------------|
 | **Random**        | Random legal move selection      |
-| **Random Forest** | Classic ML with handcrafted features |
+| **Random Forest** | Nothing that simple should work that well - Ethan Gee |
 | **Stockfish 15**  | Traditional chess engine         |
 | **Leela 4200**    | Neural chess engine              |
-| **Maia1 1500**    | Human-aligned prediction model   |
+| **Maia1 1500**    | Human aligned prediction model   |
 
 ---
 
@@ -279,23 +267,23 @@ Train on millions of human chess positions to predict human moves using a lightw
 | **Stockfish 15**  | **40%**        |
 | **Leela 4200**    | **44%**        |
 | **Maia1 1500**    | **51%**        |
-| **Rylee (Ours)**  | **25%**        |
+| **Rylee**         | **25%**        |
 
 **Rylee - Key Differences**
 
-- Rylee = 800,000 parameters
-- Trained on Raspberry pi and they trained on
+- Rylee has 800,000 parameters
+  - Trained on one Raspberry pi
 
 </div>
 <div>
 
-- Maia = 25 million parameters
-- Trained on 2 A100 80Gb GPUs
-- No filtering by game type (e.g., blitz/classical) - aims to capture broader human play patterns.
-- No Elo filtering - unlike Maia, we include games with mixed skill levels to better reflect general human behavior.
-- No data augmentation currently used.
-- Dataset is **far smaller**: ~15,000 games vs. Maia’s 169 million games 1.9 billion snapshots.
-- Model size is **~1/5** that of Maia.
+- Maia has 25 million parameters
+  - Trained on two A100 80Gb GPUs
+- No filtering by game type (classical, blitz, etc) to capture broader human play patterns
+- No Elo filtering, we include games with mixed skill levels to better reflect general human behavior
+- No data augmentation
+- 15,000 games vs. Maia’s 169 million games
+- Model size is **1/5** that of Maia's
 
 </div>
 </div>
@@ -314,7 +302,7 @@ Train on millions of human chess positions to predict human moves using a lightw
 | **Top-5 Accuracy** | 53%    | 51%      |
 
 - Strong generalization between training and validation metrics
-- Model captures key patterns of human decision-making
+- Model captures key human decision-making patterns
 - Rylee required less than 1 day of preprocessing and 2-3 days of training
 
 </div>
@@ -332,13 +320,13 @@ Train on millions of human chess positions to predict human moves using a lightw
 # Conclusions - Future Work
 
 **Model Improvements**
-- Add data augmentation (flips, rotations) to improve robustness.
-- Fine-tune rating-specific models for better skill-level alignment.
+- Add data augmentation (board flips and rotations) to improve robustness
+- Time parameter
 
 **Additional Features**
-- **ELO Prediction:** Estimate player rating from move patterns.
-- **Human vs Bot Discriminator:** Detect engine-like play.
-- **Blunder Detection:** Identify major mistakes for analysis.
+- **ELO Prediction:** Estimate player rating from move patterns
+- **Human vs Bot Discriminator:** Detect engine-like play
+- **Blunder Detection:** Identify major mistakes for analysis
 
 ---
 
