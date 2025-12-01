@@ -6,6 +6,7 @@ style: |
   section {
     background-color: #f5f5f5;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 23px;
   }
   section.lead {
     background: linear-gradient(135deg, #ccccff 0%, #a754fbff 100%);
@@ -68,22 +69,10 @@ style: |
   }
 ---
 
-<!-- TODO: OVERALL PRESENTATION REQUIREMENTS:
-     - Time limit: 10-12 minutes total
-     - Practice timing to ensure you cover all sections properly
-     - Add references slide at the end (before Questions slide) citing:
-       * Maia paper
-       * Lichess database
-       * Any other sources used
-     - Verify all font sizes are readable (current styling looks good)
-     - Ensure all figures/charts are visible when presenting
-     - Check that bullet points are concise and well-summarized
--->
-
 <!-- _class: lead -->
 
-# Rylee
-## A Human-Like Chess Engine
+# A Human-Like Chess Engine
+## Rylee
 
 **Ethan Gee & Nate Stott**
 
@@ -100,93 +89,130 @@ style: |
 
 # Introduction - Problem Definition
 
-**Maia**
-- Traditional chess engines (Stockfish, LC0) play **optimally**
-- They don't play like humans
-- Goal: Predict what move a **human** would make
+<div class="columns">
+<div>
 
-**Rylee** - All the above AND
-- Maia is a **large complex model** that takes a **lots of compute power** to train and run
-- Goal: Get about the **same accuracy** but train and run on a **raspberry pi**
+**The Maia Problem**
+- Traditional engines play **optimally**, not **humanly**
+- Predicting human moves != finding the best move
+- **Goal**: Predict what a human player would actually choose
+
+</div>
+<div>
+
+**The Rylee Problem**
+- Maia requires **GPU & large model**
+- Not edge-deployable
+- Missing opening play
+- **Goal**: Human-like play on **edge hardware**
+
+</div>
+</div>
 
 ---
 
 # Introduction - Motivation
 
-**Maia**
-- **Training partners**: Engines at human skill levels
-- **Chess education**: Learn from human-like mistakes
-- **Research**: Model human decision-making in games
+<div class="columns">
+<div>
 
-**Rylee** - all the above AND
-- Playing chess on edge devices
-- Maia can't play openings
+**Why human-like AI matters**
+- Traditional engines are **too strong** to learn from
+- Handicapping creates **unnatural play**
+- Human-like engines = **realistic training partners**
+- Example: Chess students can practice with Rylee to **experience human-style mistakes and strategies**, improving learning
+- Broader applications: Education, coaching, collaborative decision-making
+
+</div>
+<div>
+
+**Why Rylee extends Maia**
+- **Edge deployment** (Raspberry Pi, Jetson)
+- **Includes openings** (first 10 moves)
+- **Unified model** (700-2500 ELO)
+- **Human-like behavior at all levels** allows consistent training experience
+
+</div>
+</div>
 
 ---
 
 # Methodology - Proposed Solution
 
-```txt
-+------------------+     +------------------+     +------------------+
-|  Human Games     | --> |  Neural Network  | --> |  Move Prediction |
-|  (Lichess)       |     |  (CNN + FC)      |     |  (2104 classes)  |
-+------------------+     +------------------+     +------------------+
-```
+<img src="./figures/high_level.png" width="1000">
 
-Train on millions of human chess positions to predict the next move.
+Train on millions of human chess positions to predict human moves using a lightweight CNN.
 
 ---
 
 # Methodology - Theories
 
-<!-- TODO: Add content about:
-     - Theoretical foundations (supervised learning, CNNs for spatial pattern recognition)
-     - Why CNNs work for chess (spatial relationships on board)
-     - Why neural networks can model human decision-making vs optimal play
-     - Trade-offs between model size and performance (why small model can work)
-     - Connection to Maia's approach and how you differ
--->
-
----
-
-# Methodology - ML Models
-
-<!-- TODO: Consider adding visual diagrams:
-     - Architecture diagram showing network flow
-     - Data pipeline flowchart (more detailed than proposed solution slide)
-     - Sample chess board encoding visualization
-     - These visuals improve "figure visibility" in grading criteria
--->
-
 <div class="columns">
 <div>
 
-### Data Pipeline
-- **Download**: .zst files from Lichess
-- **Extract**: PGNs
-- **Split**: PGNs into individual games
-- **FEN snapshots**: Convert to board states
-- **Extract metadata**: ELO, result
-- **Encode**: One-hot encode snapshots
+**Why CNNs work well for chess**
+- Chess patterns are **spatially local** (pawn structures, king safety)
+- CNNs excel at **spatial pattern recognition**
+
+**Model size vs performance**
+- Smaller models enable **edge deployment**
+- Performance doesn't scale linearly with size
 
 </div>
 <div>
 
-### Neural Network Architecture
-- **Input**: Board(12x8x8) + Metadata(4)
-- **ConvBlock**: 6x64 @ 8x8, ReLU
-- **Flatten**: 4096 + Meta(4)
-- **Fully Connected**: 4100 -> 512 -> 32
-- **Heads**:
-  - MoveHead: 32 -> 2104
-  - AuxHead: 32 -> 2104
+**Rylee = Maia**
+- Both predict **human moves** using supervised learning
 
-### Training Settings
-- **Chosen Move Loss**: CrossEntropyLoss
-- **Valid Moves Loss**: BCE with LogitsLoss
+**Rylee != Maia**
+- **Smaller model** (edge-deployable vs GPU-only)
+- **Includes openings** (first 10 moves)
+- **Unified model** (700-2500 ELO vs 9 separate models)
+
+</div>
+</div>
+
+---
+
+# Methodology - Data Pipeline
+
+<div class="columns">
+<div>
+
+<img src="./figures/data_pipeline.png" width="600">
+
+</div>
+<div>
+
+- **Download** .zst files from Lichess
+- **Extract** PGNs
+- **Split** into individual games
+- **Convert** to board state snapshots
+- **Extract** ELO & result metadata
+- **Encode** as one-hot tensors
+
+</div>
+</div>
+
+---
+
+# Methodology - Neural Network
+
+<div class="columns">
+<div>
+
+<img src="./figures/nn_architecture.png" width="600">
+
+</div>
+<div>
+
+- **Input**: Board(12x8x8) + Metadata(4)
+- **Conv Layers**: 6x64 filters @ 8x8, ReLU
+- **Fully Connected**: 4100 -> 512 -> 32
+- **Output Heads**: Move (2104) + Auxiliary (2104)
+- **Loss**: CrossEntropy (moves) + BCE (valid moves)
 - **Optimizer**: Adam
-- **Hyperparameters**: learning_rate, decay, beta1, beta2
-- **Search Method**: Random Search
+- **Hyperparameter Search**: Random search
 
 </div>
 </div>
@@ -198,21 +224,24 @@ Train on millions of human chess positions to predict the next move.
 <div class="columns">
 <div>
 
-* **Source:** Lichess Open Database
-* **Games:** Human rated games
-* **Positions:** Each game produces multiple board snapshots (one per move)
-* **Scope:** 860,000 million games -> 25 million snapshots
-* **Action Space:** 2,104 legal move classes
-* **Legal Moves**: Indexes of Legal Moves from a given board state
+- **Source:** Lichess Open Database
+- **Games:** 15,000 human-rated games
+- **Snapshots:** 1 million board positions
+  - including openings
+  - including all game types
+- **Action Space:** 2,104 legal move classes
+- **Time Span:** January 2013
 
 </div>
 <div>
 
 | Split      | Percentage | Snapshots      |
 |------------|------------|----------------|
-| Training   | 80%        | **20,000,000** |
-| Validation | 10%        | **2,500,000**  |
-| Test       | 10%        | **2,500,000**  |
+| Training   | 80%        | **800,000**    |
+| Validation | 10%        | **100,000**    |
+| Test       | 10%        | **100,000**    |
+
+<img src="./figures/elo-distribution.png" width="600">
 
 </div>
 </div>
@@ -221,35 +250,27 @@ Train on millions of human chess positions to predict the next move.
 
 # Experiments - Baselines
 
-| Method            | Description                                         |
-|-------------------|-----------------------------------------------------|
-| **Random**        | Uniform random choice among all legal moves         |
-| **Random Forest** | Classic ML baseline using handcrafted features      |
-| **Stockfish 15**  | Strong traditional engine (anchor baseline)         |
-| **Leela 4200**    | High-strength neural chess engine (anchor baseline) |
-| **Maia1 1500**    | Human-aligned prediction model (anchor baseline)    |
+| Method            | Description                      |
+|-------------------|----------------------------------|
+| **Random**        | Random legal move selection      |
+| **Random Forest** | Classic ML with handcrafted features |
+| **Stockfish 15**  | Traditional chess engine         |
+| **Leela 4200**    | Neural chess engine              |
+| **Maia1 1500**    | Human-aligned prediction model   |
 
 ---
 
 # Experiments - Evaluation Metrics
 
-<!-- TODO: Add more evaluation metrics:
-     - Consider adding: perplexity, move ranking metrics, or accuracy by game phase
-     - Explain why these metrics are appropriate for human move prediction
--->
+- **Top-1 Accuracy**: Predicted move matches actual human move
+- **Top-5 Accuracy**: Actual move in top 5 predictions
 
-- **Top-1 Accuracy**: Predicted move is the actual move
-- **Top-5 Accuracy**: Predicted move is one of the top predicted moves
+---
 
 # Experiments - Comparisons
 
-<!-- TODO: Consider enhancing comparisons:
-     - Add visualization (bar chart or graph comparing methods)
-     - Include error bars or confidence intervals if available
-     - Add more metrics beyond Top-1 (Top-5, Top-10?)
-     - Discuss statistical significance of differences
-     - Add comparison of model sizes/computational requirements
--->
+<div class="columns">
+<div>
 
 | Method            | Top-1 Accuracy |
 |-------------------|----------------|
@@ -258,55 +279,92 @@ Train on millions of human chess positions to predict the next move.
 | **Stockfish 15**  | **40%**        |
 | **Leela 4200**    | **44%**        |
 | **Maia1 1500**    | **51%**        |
-| **Rylee (Ours)**  | **20%**        |
+| **Rylee (Ours)**  | **25%**        |
+
+**Rylee - Key Differences**
+
+- Rylee = 800,000 parameters
+- Trained on Raspberry pi and they trained on
+
+</div>
+<div>
+
+- Maia = 25 million parameters
+- Trained on 2 A100 80Gb GPUs
+- No filtering by game type (e.g., blitz/classical) - aims to capture broader human play patterns.
+- No Elo filtering - unlike Maia, we include games with mixed skill levels to better reflect general human behavior.
+- No data augmentation currently used.
+- Dataset is **far smaller**: ~15,000 games vs. Maia’s 169 million games 1.9 billion snapshots.
+- Model size is **~1/5** that of Maia.
+
+</div>
+</div>
 
 ---
 
 # Conclusions - Discussions
 
-<!-- TODO:
-     - Add discussion of what these numbers mean
-     - Discuss why Rylee achieves 20% vs Maia's 51%
-     - Discuss model size trade-offs (Raspberry Pi vs full GPU)
-     - Add insights about what worked and what didn't
-     - Consider adding: training time, model size comparison, inference speed
--->
+<div class="columns">
+<div>
 
-| Metric          | Value  |
-|-----------------|--------|
-| Training Loss   | 0.0152 |
-| Training Top-1 Accuracy  | 21.8578 |
-| Training Top-5 Accuracy  | 47.1662 |
-| Validation Loss | 0.0164 |
-| Validation Top-1 Accuracy  | 19.4929 |
-| Validation Top-5 Accuracy  | 43.1566 |
+| Metric          | Training | Validation |
+|-----------------|----------|------------|
+| **Loss**        | 0.0152   | 0.0164     |
+| **Top-1 Accuracy** | 28%    | 25%      |
+| **Top-5 Accuracy** | 53%    | 51%      |
+
+- Strong generalization between training and validation metrics
+- Model captures key patterns of human decision-making
+- Rylee required less than 1 day of preprocessing and 2-3 days of training
+
+</div>
+<div>
+
+- Maia required 8 days of preprocessing and 3-4 weeks of training
+
+<img src="./figures/epoch_curves.png" width="400">
+
+</div>
+</div>
 
 ---
 
 # Conclusions - Future Work
 
-- More training data
-- More computational resources
-- Larger models
-- Data augmentation (board flipping)
-- Elo predictor
-- Human vs Bot discriminator
-- GAN implementation
-- Blunder detection
+**Model Improvements**
+- Add data augmentation (flips, rotations) to improve robustness.
+- Fine-tune rating-specific models for better skill-level alignment.
+
+**Additional Features**
+- **ELO Prediction:** Estimate player rating from move patterns.
+- **Human vs Bot Discriminator:** Detect engine-like play.
+- **Blunder Detection:** Identify major mistakes for analysis.
 
 ---
 
 # References
 
-<!-- TODO: ADD REFERENCES SLIDE HERE:
-     Required for "references used" in grading criteria. Include:
-     - Maia Chess: https://maiachess.com/ and the Maia paper
-     - Lichess Open Database: https://database.lichess.org/
-     - Stockfish: https://stockfishchess.org/
-     - Leela Chess Zero: https://lczero.org/
-     - Any papers, frameworks, or tools you referenced
-     Format as a proper references slide with citations
--->
+<div class="columns">
+<div>
+
+**Primary Works**
+- McIlroy-Young et al. (2020). "Aligning Superhuman AI with Human Behavior: Chess as a Model System." KDD 2020.
+- Tang et al. (2024). "Maia-2: A Unified Model for Human-AI Alignment in Chess." NeurIPS 2024.
+- McIlroy-Young et al. (2021). "Detecting Individual Decision-Making Style: Exploring Behavioral Stylometry in Chess." NeurIPS 2021.
+
+</div>
+<div>
+
+**Data & Tools**
+- Lichess Open Database: https://database.lichess.org/
+- Stockfish Chess Engine: https://stockfishchess.org/
+- Leela Chess Zero: https://lczero.org/
+- Maia Chess Project: https://maiachess.com/
+- PyTorch (Paszke et al., 2019): https://pytorch.org/
+- python-chess library (Moskopp, 2014): https://github.com/niklasf/python-chess
+
+</div>
+</div>
 
 ---
 
