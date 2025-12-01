@@ -302,7 +302,7 @@ style: |
 | **Top-5 Accuracy** | 53%    | 51%      |
 
 - Strong generalization between training and validation metrics
-- Model captures key patterns of human decision-making
+- Model captures key human decision-making patterns
 - Rylee required less than 1 day of preprocessing and 2-3 days of training
 
 </div>
@@ -320,13 +320,13 @@ style: |
 # Conclusions - Future Work
 
 **Model Improvements**
-- Add data augmentation (flips, rotations) to improve robustness.
-- Fine-tune rating-specific models for better skill-level alignment.
+- Add data augmentation (board flips and rotations) to improve robustness
+- Time parameter
 
 **Additional Features**
-- **ELO Prediction:** Estimate player rating from move patterns.
-- **Human vs Bot Discriminator:** Detect engine-like play.
-- **Blunder Detection:** Identify major mistakes for analysis.
+- **ELO Prediction:** Estimate player rating from move patterns
+- **Human vs Bot Discriminator:** Detect engine-like play
+- **Blunder Detection:** Identify major mistakes for analysis
 
 ---
 
