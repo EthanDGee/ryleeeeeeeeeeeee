@@ -8,8 +8,8 @@ import torch
 
 from packages.play.src.constants import RYLEE_MODEL_PATH, RYLEE_SKILL_LEVEL
 from packages.play.src.player.player import Player, PlayerConfig
-from packages.train.src.dataset.loaders.game_snapshots import GameSnapshotsDataset
 from packages.train.src.dataset.loaders.legal_moves import LegalMovesDataset
+from packages.train.src.dataset.processers.processed_snapshots import ProcessedSnapshotsProcessor
 from packages.train.src.models.neural_network import NeuralNetwork
 
 
@@ -123,18 +123,18 @@ class RyleePlayer(Player):
             return None
 
         # Build input tensor
-        input_tensor = self._build_input_tensor(board).to(self.device)
+        metadata_tensor, board_tensor = self._build_input_tensors(board)
 
         # Run inference
         with torch.no_grad():
-            output = self.model(input_tensor)  # Shape: (1, 2104)
+            move_output, _ = self.model(metadata_tensor, board_tensor)  # Shape: (1, 2104)
 
         # Get probabilities for all moves
-        probs = output[0].cpu()  # Shape: (2104,)
+        probs = move_output[0].cpu()  # Shape: (2104,)
 
         # Find the legal move with highest probability
         best_move = None
-        best_prob = -1.0
+        best_prob = -float("inf")
 
         for move in legal_moves:
             # Convert move to UCI string
@@ -158,7 +158,7 @@ class RyleePlayer(Player):
 
         return best_move
 
-    def _build_input_tensor(self, board: chess.Board) -> torch.Tensor:
+    def _build_input_tensors(self, board: chess.Board) -> tuple[torch.Tensor, torch.Tensor]:
         """
         Build the full 772-dimensional input tensor for the model.
 
@@ -166,13 +166,14 @@ class RyleePlayer(Player):
         """
         # Use skill_level as both players' ELO for inference
         turn = "w" if board.turn else "b"
-        elo_tensor = GameSnapshotsDataset.normalize_elo(self.skill_level, self.skill_level)
-        turn_tensor = GameSnapshotsDataset.encode_turn(turn)
-        board_tensor = GameSnapshotsDataset.fen_to_tensor(board.fen())
+        elo_tensor = ProcessedSnapshotsProcessor.normalize_elo(self.skill_level, self.skill_level)
+        turn_tensor = ProcessedSnapshotsProcessor.encode_turn(turn)
+        board_tensor = ProcessedSnapshotsProcessor.fen_to_tensor(board.fen())
 
-        # Combine into single input tensor
-        input_tensor = torch.cat([elo_tensor, turn_tensor, board_tensor], dim=0)
-        return input_tensor.unsqueeze(0)  # Add batch dimension
+        # Combine into single input tensor and add batch dimension
+        metadata_tensor = torch.cat([elo_tensor, turn_tensor], dim=0).unsqueeze(0).to(self.device)
+        board_tensor = board_tensor.unsqueeze(0).to(self.device)
+        return metadata_tensor, board_tensor
 
     def close(self) -> None:
         """Unload the model (NN engines do not require engine shutdown)."""

@@ -254,7 +254,7 @@ We believes we can still maintain similar performance, and add feautures to the 
 # Experiments - Evaluation Metrics
 
 - **Top-1 Accuracy**: Predicted move matches actual human move
-- **Top-5 Accuracy**: Actual move in top 5 predictions. This is a good for a more generalizaed alignment. 
+- **Top-5 Accuracy**: Actual move in top 5 predictions. This is a good for a more generalizaed alignment.
 
 ---
 
@@ -276,13 +276,17 @@ We believes we can still maintain similar performance, and add feautures to the 
   - Trained on one Raspberry pi
 - Maia has 25 million parameters
   - Trained on two A100 80Gb GPUs
+
 </div>
 <div>
 
-- No filtering by game type (classical, blitz, etc) to capture broader human play patterns
-- No Elo filtering, we include games with mixed skill levels to better reflect general human behavior
+- We include more types of data to capture broader human play patterns
+  - A wide rage of elo ratings
+  - All game types (classical, blitz, etc) to
+  - Players can be of any skill level
+  - First 10 moves of every game so we can handle openings
 - No data augmentation
-- 15,000 games vs. Maia’s 169 million games
+- 15,167 games vs. Maia’s 169 million games
 - Model size is **1/5** that of Maia's
 
 </div>

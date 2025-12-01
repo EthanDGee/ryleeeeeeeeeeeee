@@ -7,12 +7,13 @@ from pathlib import Path
 from packages.play.src.constants import (
     GAME_SAVE_DIR,
     GAME_TIME_LIMIT,
-    LC0_TIME_LIMIT,
     STOCKFISH_SKILL_LEVEL,
     STOCKFISH_TIME_LIMIT,
 )
 from packages.play.src.game.game import Game, GameConfig
-from packages.play.src.player.lc0_bot_player import Lc0BotPlayer, Lc0BotPlayerConfig
+from packages.play.src.player.human_player import HumanPlayer
+from packages.play.src.player.lc0_bot_player import Lc0BotPlayer
+from packages.play.src.player.rylee_bot_player import RyleePlayer, RyleePlayerConfig
 from packages.play.src.player.stockfish_bot_player import StockfishPlayer, StockfishPlayerConfig
 from packages.play.src.ui.cli import Cli
 from packages.play.src.ui.gui import Gui
@@ -60,13 +61,11 @@ def main():
     save_dir = args.save_dir if args.save_dir else get_default_save_dir()
 
     # Create players (randomly assign colors)
-    white: Lc0BotPlayer | StockfishPlayer
-    black: Lc0BotPlayer | StockfishPlayer
+    white: Lc0BotPlayer | StockfishPlayer | RyleePlayer | HumanPlayer
+    black: Lc0BotPlayer | StockfishPlayer | RyleePlayer | HumanPlayer
     if random.choice([True, False]):
         print("Creating players: Leela (White) vs Stockfish (Black)")
-        white = Lc0BotPlayer(
-            config=Lc0BotPlayerConfig(name="Leela", color=True, time_limit=LC0_TIME_LIMIT)
-        )
+        white = RyleePlayer(config=RyleePlayerConfig(name="Rylee", color=True))
         black = StockfishPlayer(
             config=StockfishPlayerConfig(
                 name="Stockfish",
@@ -75,6 +74,7 @@ def main():
                 time_limit=STOCKFISH_TIME_LIMIT,
             )
         )
+        # black = HumanPlayer(config=HumanPlayerConfig(color=False))
     else:
         print("Creating players: Stockfish (White) vs Leela (Black)")
         white = StockfishPlayer(
@@ -85,9 +85,8 @@ def main():
                 time_limit=STOCKFISH_TIME_LIMIT,
             )
         )
-        black = Lc0BotPlayer(
-            config=Lc0BotPlayerConfig(name="Leela", color=False, time_limit=LC0_TIME_LIMIT)
-        )
+        # white = HumanPlayer(config=HumanPlayerConfig(color=True))
+        black = RyleePlayer(config=RyleePlayerConfig(name="Rylee", color=False))
 
     # Create game
     game = Game(white, black, config=GameConfig(save_dir=save_dir, time_limit=args.time_limit))
