@@ -71,8 +71,7 @@ style: |
 
 <!-- _class: lead -->
 
-# A Human-Like Chess Engine
-## Rylee
+# Creating a Deployable Human-Like Chess Engine to Enhance the Learning Experience
 
 **Ethan Gee & Nate Stott**
 
@@ -241,13 +240,27 @@ We believes we can still maintain similar performance, and add feautures to the 
 
 # Experiments - Baselines
 
-| Method            | Description                      |
+| Baseline Model            | Description                      |
 |-------------------|----------------------------------|
 | **Random**        | Random legal move selection      |
 | **Random Forest** | Nothing that simple should work that well - Ethan Gee |
 | **Stockfish 15**  | Traditional chess engine         |
 | **Leela 4200**    | Neural chess engine              |
 | **Maia-1 1500**    | Human aligned prediction model   |
+
+---
+
+# Experiments - Architecture
+
+### Small Fully Connected Model
+A Small model that had a similar architecture to StockFish
+- 8 fully connected layers of 32 neurons
+
+### Convolutional Model 
+- Combination of Convolution and fully connected to mirror human cognition
+
+### Convolution with Auxillary Head
+- Added an auxillary head that determines legal moves to instill better game understanding
 
 ---
 
@@ -278,18 +291,16 @@ We believes we can still maintain similar performance, and add feautures to the 
   - Trained on two A100 80Gb GPUs
 
 </div>
+
 <div>
 
-- We include more types of data to capture broader human play patterns
-  - A wide rage of elo ratings
-  - All game types (classical, blitz, etc) to
-  - Players can be of any skill level
-  - First 10 moves of every game so we can handle openings
-- No data augmentation
-- 15,167 games vs. Maia’s 169 million games
-- Model size is **1/5** that of Maia's
-
+- Rylee has 800,000 parameters vs MAIAs 25 Million
+- No filtering by game type (classical, blitz, etc) to capture broader human play patterns
+- We include games with mixed skill levels to better reflect general human behavior
+- 15,000 games vs. Maia’s 169 million games
+- MAIA was Trained on two A100 80Gb GPUs vs Rylee being trained on a Edge Device
 </div>
+
 </div>
 
 ---
@@ -307,7 +318,7 @@ We believes we can still maintain similar performance, and add feautures to the 
 
 - Strong generalization between training and validation metrics
 - Model captures key human decision-making patterns
-- Rylee required less than 1 day of preprocessing and 2-3 days of training
+- Rylee required around 1.5 hours of preprocessing and 2-3 days of training
 
 </div>
 <div>
@@ -325,10 +336,10 @@ We believes we can still maintain similar performance, and add feautures to the 
 
 **Model Improvements**
 - Add data augmentation (board flips and rotations) to improve robustness
-- Time parameter
+- Time parameter to better address time based decision making
 
 **Additional Features**
-- **ELO Prediction:** Estimate player rating from move patterns
+- **ELO Prediction:** Estimate player rating from move patterns to quickly adapt to player skill
 - **Human vs Bot Discriminator:** Detect engine-like play
 - **Blunder Detection:** Identify major mistakes for analysis
 
