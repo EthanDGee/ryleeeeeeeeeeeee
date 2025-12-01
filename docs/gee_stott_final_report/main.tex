@@ -230,6 +230,35 @@ All of the source code for this project is a available at \url{https://github.co
 
 \subsection{Experimental Evaluation}
 
+Our intitial model focused in on attempting to train a model that was at a similiar scale and architecture to the StockFish series of models. These models are extremely small, and currenly is the second strongest chess bot in the market. Even better it can be deployed easiliy to edge devices due to it's relatively small size, as it only consists of 6 fully connected layers. It should be mentioned that it's neural engines deployability is due to it's more limited role of simply evaluating board states, and its NNUE (Efficiently Updatable Neural Network) architecture. So part of it's strenght is thanks to it's ability to effecticently operate in a mini max search system. That being said we trained from that starting point. After training we acchevied a meager score of around ~3.5\% accuracy.
+
+Seeking to improve upon this we added a convolutional approach to board state evaluation. The idea being that this allowed for a far more human approach to how humans approach boards. Human players typically evaluate the strength of their peices by looking at their placement on the board (e.g. Knights are valued higher near the center of the board). This means that a system  like convolution al layers allow for boards to be weighed based on these traits has potential. This lead to a massive breakthrigh in perfromance increasing accuracy to ~21.5\%.
+
+One further probelm with a machine learning based approach is the challenge of learning the rules of the game being played. To improve this MAIA ET AL added an auxillary head with the express idea of improving the models performance by having it predict the legal moves possible from a given board state. This was shown to have profound impact. Implementing this same system into our model lead to our accuracy jumping to arounn ~25\%.
+
+\begin{table}
+    \centering
+    \caption{Comparison of Model Accuracy}
+    \vspace{0.2cm} % Add a little space between caption and table
+    \begin{tabular}
+        \toprule
+        \textbf{Name} & \textbf{Accuracy} \\
+        \midrule
+        Random Moves & 6\% \\
+        Random Forest & 13\% \\
+        Stockfish & 40\% \\
+        Leela 4200 & 44\% \\
+        Maia1 1500 & 51\% \\
+        Rylee Fully Connected & 3.5% \\
+        Rylee Conv & 21.5\% \\
+        Rylee Conv with Aux & 25% \\
+        \bottomrule
+    \end{tabular}
+    \label{tab:model-accuracy}
+\end{table}
+
+
+
 % TODO: This section is worth 10% of the grade - needs comprehensive content with visualizations
 % TODO: Add training curves (loss over epochs, accuracy over epochs)
 % TODO: Add comparison tables (Rylee vs Maia vs baselines)
