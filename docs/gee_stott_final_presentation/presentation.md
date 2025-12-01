@@ -267,7 +267,7 @@ A Small model that had a similar architecture to StockFish
 # Experiments - Evaluation Metrics
 
 - **Top-1 Accuracy**: Predicted move matches actual human move
-- **Top-5 Accuracy**: Actual move in top 5 predictions. This is a good for a more generalizaed alignment. 
+- **Top-5 Accuracy**: Actual move in top 5 predictions. This is a good for a more generalizaed alignment.
 
 ---
 
@@ -276,16 +276,20 @@ A Small model that had a similar architecture to StockFish
 <div class="columns">
 <div>
 
-| Method                  | Top-1 Accuracy |
-|-------------------------|----------------|
-| **Random**              | **6%**         |
-| **Random Forest**       | **13%**        |
-| **Stockfish 15**        | **40%**        |
-| **Leela 4200**          | **44%**        |
-| **Maia1 1500**          | **51%**        |
-| **Rylee FC**            | **3.5%**       |
-| **Rylee Conv**          | **23.5%**      |
-| **Rylee Conv with Aux** | **25%**        |
+| Method            | Top-1 Accuracy |
+|-------------------|----------------|
+| **Random**        | **6%**         |
+| **Random Forest** | **13%**        |
+| **Stockfish 15**  | **40%**        |
+| **Leela 4200**    | **44%**        |
+| **Maia1 1500**    | **51%**        |
+| **Rylee**         | **25%**        |
+
+- Rylee has 800,000 parameters
+  - Trained on one Raspberry pi
+- Maia has 25 million parameters
+  - Trained on two A100 80Gb GPUs
+
 </div>
 
 <div>
