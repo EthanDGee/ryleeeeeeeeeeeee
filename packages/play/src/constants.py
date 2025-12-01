@@ -56,8 +56,8 @@ COLOR_HIGHLIGHT_CAPTURE_SQUARE = os.getenv("COLOR_HIGHLIGHT_CAPTURE_SQUARE", "#F
 STOCKFISH_SKILL_LEVEL = int(os.getenv("STOCKFISH_SKILL_LEVEL", "10"))
 STOCKFISH_TIME_LIMIT = float(os.getenv("STOCKFISH_TIME_LIMIT", "1.0"))
 LC0_TIME_LIMIT = float(os.getenv("LC0_TIME_LIMIT", "1.0"))
-ENIA_SKILL_LEVEL = int(os.getenv("ENIA_SKILL_LEVEL", "1200"))
-ENIA_MODEL_PATH = str(os.getenv("ENIA_MODEL_PATH", "~/enia_models/model1.pt"))
+RYLEE_SKILL_LEVEL = int(os.getenv("RYLEE_SKILL_LEVEL", "1200"))
+RYLEE_MODEL_PATH = str(os.getenv("RYLEE_MODEL_PATH", "packages/play/models/rylee.pth"))
 
 # CLI configuration
 CLI_LOOP_INTERVAL = float(os.getenv("CLI_LOOP_INTERVAL", "0.1"))

@@ -87,8 +87,8 @@ class Analyzer:
         self._plot_metrics(
             ax2,
             epoch_df["epoch"],
-            epoch_df["train_accuracy"],
-            epoch_df["val_accuracy"],
+            epoch_df["train_top5_accuracy"],
+            epoch_df["val_top5_accuracy"],
             "Epoch",
             "Accuracy",
         )
@@ -107,8 +107,8 @@ class Analyzer:
         )
         self._save_single_plot(
             epoch_df["epoch"],
-            epoch_df["train_accuracy"],
-            epoch_df["val_accuracy"],
+            epoch_df["train_top5_accuracy"],
+            epoch_df["val_top5_accuracy"],
             "Epoch",
             "Accuracy",
             os.path.join(self.final_save, model_name, "epoch_accuracy.png"),
@@ -131,8 +131,8 @@ class Analyzer:
         self._plot_metrics(
             ax2,
             save_df["timestamp"],
-            save_df["train_accuracy"],
-            save_df["val_accuracy"],
+            save_df["train_top5_accuracy"],
+            save_df["val_top5_accuracy"],
             "Time",
             "Accuracy",
             rotate_x=True,
@@ -153,8 +153,8 @@ class Analyzer:
         )
         self._save_single_plot(
             save_df["timestamp"],
-            save_df["train_accuracy"],
-            save_df["val_accuracy"],
+            save_df["train_top5_accuracy"],
+            save_df["val_top5_accuracy"],
             "Time",
             "Accuracy",
             os.path.join(self.final_save, model_name, "save_accuracy.png"),
@@ -178,8 +178,8 @@ class Analyzer:
         self._plot_metrics(
             ax2,
             epoch_df["epoch"],
-            epoch_df["train_accuracy"],
-            epoch_df["val_accuracy"],
+            epoch_df["train_top5_accuracy"],
+            epoch_df["val_top5_accuracy"],
             "Epoch",
             "Accuracy",
             "Epoch Accuracy",
@@ -197,8 +197,8 @@ class Analyzer:
         self._plot_metrics(
             ax4,
             save_df["timestamp"],
-            save_df["train_accuracy"],
-            save_df["val_accuracy"],
+            save_df["train_top5_accuracy"],
+            save_df["val_top5_accuracy"],
             "Time",
             "Accuracy",
             "Save Accuracy",
@@ -227,7 +227,7 @@ class Analyzer:
 
 
 if __name__ == "__main__":
-    analyzer = Analyzer(training_directory="analysis")
+    analyzer = Analyzer(training_directory="/home/goose/Downloads/chess-bot")
     print(analyzer.model_directories)
     for model in analyzer.model_directories:
         analyzer._graph_training_curves(model)

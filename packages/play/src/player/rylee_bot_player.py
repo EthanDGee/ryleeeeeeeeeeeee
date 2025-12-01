@@ -6,7 +6,7 @@ from pathlib import Path
 import chess
 import torch
 
-from packages.play.src.constants import Rylee_MODEL_PATH, Rylee_SKILL_LEVEL
+from packages.play.src.constants import RYLEE_MODEL_PATH, RYLEE_SKILL_LEVEL
 from packages.play.src.player.player import Player, PlayerConfig
 from packages.train.src.dataset.loaders.game_snapshots import GameSnapshotsDataset
 from packages.train.src.dataset.loaders.legal_moves import LegalMovesDataset
@@ -28,8 +28,8 @@ class RyleePlayerConfig(PlayerConfig):
 
     name: str = "Rylee"
     color: bool = True
-    skill_level: int = Rylee_SKILL_LEVEL
-    model_path: str = Rylee_MODEL_PATH
+    skill_level: int = RYLEE_SKILL_LEVEL
+    model_path: str = RYLEE_MODEL_PATH
 
 
 class RyleePlayer(Player):
