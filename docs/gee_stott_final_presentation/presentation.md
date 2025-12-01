@@ -221,6 +221,7 @@ We believes we can still maintain similar performance, and add features to the M
   - including all game types
 - **Action Space:** 2,104 legal move classes
 - **Time Span:** January 2013
+- **Expanded Capabilities:** Covering 5x the amount of data
 
 </div>
 <div>
@@ -287,6 +288,7 @@ A Small model that had a similar architecture to StockFish
 | **Rylee FC**            | **3.5%**       |
 | **Rylee Conv**          | **23.5%**      |
 | **Rylee Conv with Aux** | **25%**        |
+| **Rylee Conv with Aux Filtered** | **35%**        |
 
 </div>
 <div>
@@ -318,11 +320,12 @@ We have a tkinter gui. Here is it running on a crappy laptop. Black is Rylee and
 | Metric          | Training | Validation |
 |-----------------|----------|------------|
 | **Loss**        | 0.0152   | 0.0164     |
-| **Top-1 Accuracy** | 28%    | 25%      |
+| **Top-1 Accuracy** | 27%    | 25%      |
 | **Top-5 Accuracy** | 53%    | 51%      |
+| **Top-1 Accuracy Filtered** | 36%    | 35%      |
+| **Top-5 Accuracy Filtered** | 54%    | 53%      |
 
-- Strong generalization between training and validation metrics
-- Model captures key human decision-making patterns
+- Strong generalization between training and validation metrics. Model captures key human decision-making patterns.
 - Rylee required around 1.5 hours of preprocessing and 2-3 days of training
 
 </div>
@@ -350,6 +353,16 @@ We have a tkinter gui. Here is it running on a crappy laptop. Black is Rylee and
 
 ---
 
+# Conclusions - Summary
+
+- **Rylee mimics human chess behavior** using a model that is 30x smaller than Maia
+- **Achieves competitive accuracy** (25-35% Top-1, 51-54% Top-5) despite using significantly less data, compute, and expanding capabilities, and data variety
+- **Efficient data pipeline and compact architecture** make Rylee deployable edge devices such as Chromebooks and Raspberry Pis
+- **Generalizes well** across training and validation datasets, indicating a healthy fitting of human chess playing patterns
+- **Demonstrates the feasibility** of edge-deployable, human-aligned AI for education applications
+
+---
+
 # References
 
 <div class="columns">
@@ -359,6 +372,8 @@ We have a tkinter gui. Here is it running on a crappy laptop. Black is Rylee and
 - McIlroy-Young et al. (2020). "Aligning Superhuman AI with Human Behavior: Chess as a Model System." KDD 2020.
 - Tang et al. (2024). "Maia-2: A Unified Model for Human-AI Alignment in Chess." NeurIPS 2024.
 - McIlroy-Young et al. (2021). "Detecting Individual Decision-Making Style: Exploring Behavioral Stylometry in Chess." NeurIPS 2021.
+
+**Rylee Repo:** https://github.com/EthanDGee/ryleeeeeeeeeeeee
 
 </div>
 <div>
