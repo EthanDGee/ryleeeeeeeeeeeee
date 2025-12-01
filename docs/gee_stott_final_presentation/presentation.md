@@ -139,25 +139,14 @@ style: |
 
 # Methodology - Proposed Solution
 
+We believes we can still maintain similar performance, and add feautures to the MAIA model while signficantly reducing model size.
+
 <img src="./figures/high_level.png" width="1000">
 
 1. Pull data from Lichess
 2. Preprocess games
 3. Feed data into NN
 4. Predict moves
-
----
-
-# Methodology - Theories
-
-
-**Why CNNs work well for chess**
-- Chess boards are **spatially related** (knight is better if its in the middle)
-- CNNs excel at **spatial pattern recognition**
-
-**Model size vs performance**
-- Model size increases performance exponentially
-- We are hoping we can decrease the size of the Maia model while still keeping high accuracy
 
 ---
 
@@ -180,6 +169,20 @@ style: |
 
 </div>
 </div>
+
+---
+
+# Methodology - Theories
+
+
+**Why CNNs work well for chess**
+- Chess boards are **spatially related** (knight is better if its in the middle)
+- Humans evaluate through pattern recognition
+- CNNs excel at **spatial pattern recognition**
+
+**Model size vs performance**
+- Increasing model size has exponentially diminishing returns
+- We are hoping we can decrease the size of the Maia model while still keeping high accuracy
 
 ---
 
@@ -213,7 +216,7 @@ style: |
 <div>
 
 - **Source:** Lichess Open Database
-- **Games:** 15,000 human-rated games
+- **Games:** 15,167 human-rated games
 - **Snapshots:** 1 million board states
   - including openings
   - including all game types
@@ -244,14 +247,14 @@ style: |
 | **Random Forest** | Nothing that simple should work that well - Ethan Gee |
 | **Stockfish 15**  | Traditional chess engine         |
 | **Leela 4200**    | Neural chess engine              |
-| **Maia1 1500**    | Human aligned prediction model   |
+| **Maia-1 1500**    | Human aligned prediction model   |
 
 ---
 
 # Experiments - Evaluation Metrics
 
 - **Top-1 Accuracy**: Predicted move matches actual human move
-- **Top-5 Accuracy**: Actual move in top 5 predictions
+- **Top-5 Accuracy**: Actual move in top 5 predictions. This is a good for a more generalizaed alignment. 
 
 ---
 
@@ -269,16 +272,13 @@ style: |
 | **Maia1 1500**    | **51%**        |
 | **Rylee**         | **25%**        |
 
-**Rylee - Key Differences**
-
 - Rylee has 800,000 parameters
   - Trained on one Raspberry pi
-
+- Maia has 25 million parameters
+  - Trained on two A100 80Gb GPUs
 </div>
 <div>
 
-- Maia has 25 million parameters
-  - Trained on two A100 80Gb GPUs
 - No filtering by game type (classical, blitz, etc) to capture broader human play patterns
 - No Elo filtering, we include games with mixed skill levels to better reflect general human behavior
 - No data augmentation
