@@ -206,20 +206,10 @@ Train on millions of human chess positions to predict human moves using a lightw
 </div>
 <div>
 
-Maia = 78 MB parameter file
-Rylee = 14 MB parameter file
-
-Trained on Raspberry pi
-
-Dual Head is good because...
-
-### Architecture
 - **Input**: Board(12x8x8) + Metadata(4)
 - **Conv Layers**: 6x64 filters @ 8x8, ReLU
 - **Fully Connected**: 4100 -> 512 -> 32
 - **Output Heads**: Move (2104) + Auxiliary (2104)
-
-### Training
 - **Loss**: CrossEntropy (moves) + BCE (valid moves)
 - **Optimizer**: Adam
 - **Hyperparameter Search**: Random search
@@ -291,15 +281,20 @@ Dual Head is good because...
 | **Maia1 1500**    | **51%**        |
 | **Rylee (Ours)**  | **25%**        |
 
+**Rylee - Key Differences**
+
+- Rylee = 800,000 parameters
+- Trained on Raspberry pi and they trained on
+
 </div>
 <div>
 
-**Rylee - Key Differences**
-
+- Maia = 25 million parameters
+- Trained on 2 A100 80Gb GPUs
 - No filtering by game type (e.g., blitz/classical) - aims to capture broader human play patterns.
 - No Elo filtering - unlike Maia, we include games with mixed skill levels to better reflect general human behavior.
 - No data augmentation currently used.
-- Dataset is **far smaller**: ~15,000 games vs. Maia’s 1.5 billion.
+- Dataset is **far smaller**: ~15,000 games vs. Maia’s 169 million games 1.9 billion snapshots.
 - Model size is **~1/5** that of Maia.
 
 </div>
