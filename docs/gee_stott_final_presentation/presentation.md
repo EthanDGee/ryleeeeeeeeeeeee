@@ -103,7 +103,7 @@ style: |
 - Maia requires **large GPUs** to run and train
 - Maia can only run on high end machines
 - Maia was not trained to play chess openings
-- **Goal**: Make a **practical & deployable#** version of Maia
+- **Goal**: Make a **practical & deployable** version of Maia
 
 </div>
 </div>
@@ -138,7 +138,7 @@ style: |
 
 # Methodology - Proposed Solution
 
-We believes we can still maintain similar performance, and add feautures to the MAIA model while signficantly reducing model size.
+We believes we can still maintain similar performance, and add features to the Maia model while significantly reducing model size.
 
 <img src="./figures/high_level.png" width="1000">
 
@@ -267,7 +267,7 @@ A Small model that had a similar architecture to StockFish
 # Experiments - Evaluation Metrics
 
 - **Top-1 Accuracy**: Predicted move matches actual human move
-- **Top-5 Accuracy**: Actual move in top 5 predictions. This is a good for a more generalizaed alignment.
+- **Top-5 Accuracy**: Actual move in top 5 predictions. This is a good for a more generalized alignment.
 
 ---
 
@@ -276,28 +276,26 @@ A Small model that had a similar architecture to StockFish
 <div class="columns">
 <div>
 
-| Method            | Top-1 Accuracy |
-|-------------------|----------------|
-| **Random**        | **6%**         |
-| **Random Forest** | **13%**        |
-| **Stockfish 15**  | **40%**        |
-| **Leela 4200**    | **44%**        |
-| **Maia1 1500**    | **51%**        |
-| **Rylee**         | **25%**        |
 
-- Rylee has 800,000 parameters
-  - Trained on one Raspberry pi
-- Maia has 25 million parameters
-  - Trained on two A100 80Gb GPUs
+| Method                  | Top-1 Accuracy |
+|-------------------------|----------------|
+| **Random**              | **6%**         |
+| **Random Forest**       | **13%**        |
+| **Stockfish 15**        | **40%**        |
+| **Leela 4200**          | **44%**        |
+| **Maia1 1500**          | **51%**        |
+| **Rylee FC**            | **3.5%**       |
+| **Rylee Conv**          | **23.5%**      |
+| **Rylee Conv with Aux** | **25%**        |
 
 </div>
 <div>
 
-- Rylee has 800,000 parameters vs MAIAs 25 Million
+- Rylee has 800,000 parameters vs Maia's 25 Million
 - No filtering by game type (classical, blitz, etc) to capture broader human play patterns
 - We include games with mixed skill levels to better reflect general human behavior
 - 15,000 games vs. Maia’s 169 million games
-- MAIA was Trained on two A100 80Gb GPUs vs Rylee being trained on a Edge Device
+- Maia was Trained on two A100 80Gb GPUs vs Rylee being trained on a Edge Device
 
 </div>
 </div>
@@ -382,6 +380,6 @@ We have a tkinter gui. Here is it running on a crappy laptop. Black is Rylee and
 
 # Questions?
 
-**Rylee**: Human-Like Chess Engine
+**Rylee**: Creating a Deployable Human-Like Chess Engine to Enhance the Learning Experience
 
 Ethan Gee & Nate Stott
