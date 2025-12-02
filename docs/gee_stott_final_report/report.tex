@@ -79,6 +79,12 @@ Prior work has leveraged this dataset extensively. The Maia project utilized mil
 
 We structured our work on the chess engine Rylee around three core components: data processing, model training, and deployment into a playable environment. First, we automated the download of Lichess data files and passed them through a preparation pipeline, converting them into standardized, training-ready formats and storing the processed results in a database. During training, the model draws directly from this preprocessed dataset, eliminating the need to re-run the preparation pipeline and allowing us to iterate on model architecture and training configurations efficiently. Finally, the trained model is deployed into an interactive environment where it can be evaluated through live play.
 
+\begin{figure}[htbp]
+\centerline{\includegraphics[width=\linewidth]{figures/high_level.png}}
+\caption{High-level system architecture showing the data flow from Lichess games through preprocessing to neural network training and move prediction.}
+\label{fig:highlevel}
+\end{figure}
+
 \subsection{Data Collection and Processing}
 
 \subsubsection{PGN File Processing}
@@ -86,6 +92,12 @@ We structured our work on the chess engine Rylee around three core components: d
 Lichess data is stored in the form of PGN files. PGN or Portable Game Notation is made up of 2 parts the tag pairs, which stores game metadata about the game and players, and the move strings of the game stored in UCI.
 
 To make this data usable we stored the players elos, which is a measure of their skill. Then we iterate through the game storing ``snapshots'' of the board at every state, and the move taken by the current player at that position. The board states are then represented as 3 dimensional tensors that are 8 by 8 (due to the size of the board) with 12 channels with 6 channels for each of the white pieces and 6 for the black.
+
+\begin{figure}[htbp]
+\centerline{\includegraphics[width=\linewidth]{figures/data_pipeline.png}}
+\caption{Data processing pipeline from raw Lichess PGN files to neural network training data, including game parsing, snapshot extraction, and encoding.}
+\label{fig:pipeline}
+\end{figure}
 
 \subsection{Neural Network Architecture}
 
@@ -116,6 +128,12 @@ Output representation:
 \end{itemize}
 
 The architecture balances computational efficiency with sufficient complexity to capture chess patterns and human play styles. The dual head design allows simultaneous learning of move prediction and auxiliary chess concepts.
+
+\begin{figure}[htbp]
+\centerline{\includegraphics[width=0.8\linewidth]{figures/nn_architecture.png}}
+\caption{Neural network architecture showing the convolutional backbone, flatten layer, fully connected layers, and dual output heads for move prediction and auxiliary legal move prediction.}
+\label{fig:nnarch}
+\end{figure}
 
 \subsection{Training Process}
 
@@ -291,6 +309,12 @@ Our final model with convolutional layers and auxiliary head demonstrated strong
 \end{table}
 
 The close alignment between training and validation metrics indicates minimal overfitting, suggesting that Rylee has successfully captured generalizable patterns in human chess decision-making rather than memorizing specific positions. The filtered accuracy metrics, which exclude trivial or forced moves, show that Rylee achieves 35\% Top-1 accuracy on meaningful chess decisions.
+
+\begin{figure}[htbp]
+\centerline{\includegraphics[width=\linewidth]{figures/epoch_curves.png}}
+\caption{Training and validation curves showing loss and accuracy over 100 epochs. The close alignment between training and validation metrics demonstrates strong generalization with minimal overfitting.}
+\label{fig:curves}
+\end{figure}
 
 \subsubsection{Computational Efficiency}
 
