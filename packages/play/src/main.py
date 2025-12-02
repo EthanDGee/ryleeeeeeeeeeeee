@@ -4,17 +4,12 @@ import argparse
 import random
 from pathlib import Path
 
-from packages.play.src.constants import (
-    GAME_SAVE_DIR,
-    GAME_TIME_LIMIT,
-    STOCKFISH_SKILL_LEVEL,
-    STOCKFISH_TIME_LIMIT,
-)
+from packages.play.src.constants import GAME_SAVE_DIR, GAME_TIME_LIMIT
 from packages.play.src.game.game import Game, GameConfig
 from packages.play.src.player.human_player import HumanPlayer
 from packages.play.src.player.lc0_bot_player import Lc0BotPlayer
 from packages.play.src.player.rylee_bot_player import RyleePlayer, RyleePlayerConfig
-from packages.play.src.player.stockfish_bot_player import StockfishPlayer, StockfishPlayerConfig
+from packages.play.src.player.stockfish_bot_player import StockfishPlayer
 from packages.play.src.ui.cli import Cli
 from packages.play.src.ui.gui import Gui
 from packages.play.src.ui.ui import Ui
@@ -66,26 +61,34 @@ def main():
     if random.choice([True, False]):
         print("Creating players: Leela (White) vs Stockfish (Black)")
         white = RyleePlayer(config=RyleePlayerConfig(name="Rylee", color=True))
-        black = StockfishPlayer(
-            config=StockfishPlayerConfig(
-                name="Stockfish",
-                color=False,
-                skill_level=STOCKFISH_SKILL_LEVEL,
-                time_limit=STOCKFISH_TIME_LIMIT,
-            )
-        )
+
+        # black = StockfishPlayer(
+        #     config=StockfishPlayerConfig(
+        #         name="Stockfish",
+        #         color=False,
+        #         skill_level=STOCKFISH_SKILL_LEVEL,
+        #         time_limit=STOCKFISH_TIME_LIMIT,
+        #     )
+        # )
+
+        black = RyleePlayer(config=RyleePlayerConfig(name="Rylee", color=False))
+
         # black = HumanPlayer(config=HumanPlayerConfig(color=False))
     else:
         print("Creating players: Stockfish (White) vs Leela (Black)")
-        white = StockfishPlayer(
-            config=StockfishPlayerConfig(
-                name="Stockfish",
-                color=True,
-                skill_level=STOCKFISH_SKILL_LEVEL,
-                time_limit=STOCKFISH_TIME_LIMIT,
-            )
-        )
+        # white = StockfishPlayer(
+        #     config=StockfishPlayerConfig(
+        #         name="Stockfish",
+        #         color=True,
+        #         skill_level=STOCKFISH_SKILL_LEVEL,
+        #         time_limit=STOCKFISH_TIME_LIMIT,
+        #     )
+        # )
+
         # white = HumanPlayer(config=HumanPlayerConfig(color=True))
+
+        white = RyleePlayer(config=RyleePlayerConfig(name="Rylee", color=True))
+
         black = RyleePlayer(config=RyleePlayerConfig(name="Rylee", color=False))
 
     # Create game
