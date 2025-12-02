@@ -1,11 +1,12 @@
 # Rylee - The Human-like Chessbot
 
-Chess application suite with multiple engines, data processing tools, and ML training utilities.
+Rylee is a chess application suite with multiple engines, data processing tools, and ML training utilities.
 
 ## Features
 
 - Interactive chess game (GUI and CLI)
-- Multiple chess engines (Stockfish, LCZero, Random bot)
+- Human focused chess engine (Rylee)
+- Multiple chess engines (Stockfish, LCZero, Random bot, and Rylee Bot)
 - PGN file processing and conversion to CSV
 - Lichess data pipeline for ML training
 - Time controls and automatic game recording
@@ -15,7 +16,7 @@ Chess application suite with multiple engines, data processing tools, and ML tra
 ```bash
 # Clone and setup
 git clone <repository-url>
-cd human-chessbot
+cd rylee
 python -m venv .venv
 source .venv/bin/activate  # Windows: .venv\Scripts\activate
 
@@ -30,10 +31,10 @@ python -m packages.play.src.main
 ## Project Structure
 
 ```
-human-chessbot/
+rylee/
 ├── packages/
-│   ├── play/          # Chess game application
 │   ├── convert/       # PGN conversion utilities
+│   ├── play/          # Chess game application
 │   └── train/         # ML training and dataset pipeline
 ├── docs/              # Development documentation
 └── pyproject.toml
@@ -48,11 +49,11 @@ Interactive chess game with Stockfish, LCZero, and random bot support.
 PGN file combination and conversion to CSV for ML training.
 
 ### [Train](packages/train/README.md)
-ML training pipeline and Lichess dataset ETL (in development).
+ML training pipeline and Lichess dataset ETL.
 
 ## Development
 
-**Requirements**: Python 3.11+, optional: Stockfish/LCZero engines
+**Requirements**: Python 3.12+, optional: Stockfish/LCZero engines
 
 ### Running Tests
 
