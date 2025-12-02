@@ -71,7 +71,7 @@ While the pursuit of optimal play has been the primary focus of chess engine dev
 
 The Lichess database has emerged as the standard dataset for human chess modeling research. As a publicly available collection of games from the Lichess.org platform, it provides unprecedented scale and diversity---containing billions of games spanning a wide range of player skill levels from beginner to grandmaster. The dataset's completeness makes it particularly valuable: each game includes not only move sequences in Portable Game Notation (PGN) format, but also player ELO ratings, game outcomes, time controls, and temporal information.
 
-Prior work has leveraged this dataset extensively. The Maia project utilized millions of Lichess games filtered to specific rating bands (1100-1900 ELO) and game types (classical time controls only), training separate models for each 100-point rating interval. This approach enabled rating-specific modeling but required substantial computational resources for data processing and model training. Other researchers have used the Lichess dataset for opening theory analysis, playing style detection, and cheat detection, demonstrating its versatility beyond move prediction tasks.
+Prior work has leveraged this dataset extensively. The Maia project utilized 169 million Lichess games filtered to specific rating bands (1100-1900 ELO) and game types (classical time controls only), training separate models for each 100-point rating interval. This approach enabled rating-specific modeling but required substantial computational resources for data processing and model training. Other researchers have used the Lichess dataset for opening theory analysis, playing style detection, and cheat detection, demonstrating its versatility beyond move prediction tasks.
 
 \section{Proposed Method}
 
@@ -191,7 +191,7 @@ This setup processed approximately 10,000 positions per second during training.
 
 \subsection{Dataset Description}
 
-We trained our model off of 823,000 games from January to May of 2013. These games were played by a wide breadth of players in a variety of states. The original maia model was split into 9 separate models split apart by elo ranges of 100 (e.g. 1100-1200) this limited the models generalizability and so we trained our model on one complete dataset to increase access. Exanding from 1100-1900 to 700-2500 to further increase access.
+We trained our model off of 15,167 games from January of 2013. These games were played by a wide breadth of players in a variety of states. The original maia model was split into 9 separate models split apart by elo ranges of 100 (e.g. 1100-1200) this limited the models generalizability and so we trained our model on one complete dataset to increase access. Expanding from 1100-1900 to 700-2500 to further increase access.
 
 \begin{figure}[htbp]
 \centerline{\includegraphics[width=\linewidth]{figures/elo-distribution.png}}
@@ -205,7 +205,7 @@ We also didn't limit the model to just the blitz games as we wanted to increase 
 
 \begin{figure}[htbp]
 \centerline{\includegraphics[width=\linewidth]{figures/time_control_distribution.png}}
-\caption{Time Control Splits of the games from Jan-May of 2013}
+\caption{Time Control Splits of the games from January of 2013}
 \label{fig:timecontrol}
 \end{figure}
 
@@ -214,7 +214,7 @@ The Lichess dataset used in this project consists of over 1 billion chess games 
 \begin{itemize}
 \item Total size: ~2TB of compressed game data
 \item Game format: Portable Game Notation (PGN)
-\item Rating range: 800-2900 ELO
+\item Rating range: 700-2500 ELO
 \item Game types: Classical, Rapid, Blitz, and Bullet time controls
 \item Key fields per game:
 \begin{itemize}
@@ -227,7 +227,7 @@ The Lichess dataset used in this project consists of over 1 billion chess games 
 \end{itemize}
 \end{itemize}
 
-For training, we took data from January to May of 2013 consisting of 860,000 games from players rated 797-2412 ELO to focus on typical club-level play patterns. Games were validated to remove incomplete or corrupted entries.
+For training, we used 15,167 human-rated games from January of 2013 from players rated 700-2500 ELO, generating approximately 1 million board snapshots. The dataset was split into 80\% training (800,000 snapshots), 10\% validation (100,000 snapshots), and 10\% test (100,000 snapshots). Games were validated to remove incomplete or corrupted entries.
 
 Data processing pipeline:
 \begin{enumerate}
@@ -259,9 +259,9 @@ All of the source code for this project is a available at \url{https://github.co
 
 Our intitial model focused in on attempting to train a model that was at a similiar scale and architecture to the StockFish series of models. These models are extremely small, and currenly is the second strongest chess bot in the market. Even better it can be deployed easiliy to edge devices due to it's relatively small size, as it only consists of 6 fully connected layers. It should be mentioned that it's neural engines deployability is due to it's more limited role of simply evaluating board states, and its NNUE (Efficiently Updatable Neural Network) architecture. So part of it's strenght is thanks to it's ability to effecticently operate in a mini max search system. That being said we trained from that starting point. After training we acchevied a meager score of around ~3.5\% accuracy.
 
-Seeking to improve upon this we added a convolutional approach to board state evaluation. The idea being that this allowed for a far more human approach to how humans approach boards. Human players typically evaluate the strength of their peices by looking at their placement on the board (e.g. Knights are valued higher near the center of the board). This means that a system  like convolution al layers allow for boards to be weighed based on these traits has potential. This lead to a massive breakthrigh in perfromance increasing accuracy to ~21.5\%.
+Seeking to improve upon this we added a convolutional approach to board state evaluation. The idea being that this allowed for a far more human approach to how humans approach boards. Human players typically evaluate the strength of their pieces by looking at their placement on the board (e.g. Knights are valued higher near the center of the board). This means that a system like convolutional layers allow for boards to be weighed based on these traits has potential. This lead to a massive breakthrough in performance increasing accuracy to ~23.5\%.
 
-One further probelm with a machine learning based approach is the challenge of learning the rules of the game being played. To improve this MAIA ET AL added an auxillary head with the express idea of improving the models performance by having it predict the legal moves possible from a given board state. This was shown to have profound impact. Implementing this same system into our model lead to our accuracy jumping to arounn ~25\%.
+One further problem with a machine learning based approach is the challenge of learning the rules of the game being played. To improve this MAIA ET AL added an auxiliary head with the express idea of improving the models performance by having it predict the legal moves possible from a given board state. This was shown to have profound impact. Implementing this same system into our model lead to our accuracy jumping to around ~25\%.
 
 \begin{table}
     \centering
@@ -277,8 +277,9 @@ One further probelm with a machine learning based approach is the challenge of l
         Leela 4200 & 44\% \\
         Maia1 1500 & 51\% \\
         Rylee Fully Connected & 3.5\% \\
-        Rylee Conv & 21.5\% \\
+        Rylee Conv & 23.5\% \\
         Rylee Conv with Aux & 25\% \\
+        Rylee Conv with Aux Filtered & 35\% \\
         \bottomrule
     \end{tabular}
     \label{tab:model-accuracy}
@@ -334,8 +335,9 @@ The progression from fully connected to convolutional architecture with auxiliar
 
 \begin{itemize}
 \item \textbf{Fully Connected (FC):} 3.5\% accuracy - insufficient for capturing chess patterns
-\item \textbf{Convolutional (Conv):} 21.5\% accuracy - 6x improvement by leveraging spatial relationships
-\item \textbf{Conv + Auxiliary Head:} 25\% accuracy - additional 3.5\% gain from learning legal move prediction
+\item \textbf{Convolutional (Conv):} 23.5\% accuracy - 6.7x improvement by leveraging spatial relationships
+\item \textbf{Conv + Auxiliary Head:} 25\% accuracy - additional 1.5\% gain from learning legal move prediction
+\item \textbf{Conv + Auxiliary Head (Filtered):} 35\% accuracy - performance on non-trivial positions
 \end{itemize}
 
 The auxiliary head, which predicts legal moves using binary cross-entropy loss, helps the model develop a better understanding of chess rules and board dynamics, complementing the main move prediction task.
@@ -346,7 +348,7 @@ While Rylee's 25\% Top-1 accuracy is lower than Maia's 51\%, this comparison mus
 
 \begin{enumerate}
 \item Rylee uses 30x fewer parameters (800K vs. 25M)
-\item Rylee trains on 15,000 games vs. Maia's millions
+\item Rylee trains on 15,167 games vs. Maia's 169 million games
 \item Rylee includes diverse game types (blitz, rapid, classical) while Maia filters to only classical
 \item Rylee covers broader ELO range (700-2500 vs. 1100-1900)
 \item Rylee includes opening moves (first 10 moves) which Maia cannot predict
