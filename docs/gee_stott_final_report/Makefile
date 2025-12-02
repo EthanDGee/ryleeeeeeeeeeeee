@@ -2,7 +2,7 @@
 # Requires: pdflatex (part of texlive)
 
 # Variables
-MAIN = main
+MAIN = report
 OUTPUT = gee_stott_final_report.pdf
 FIGURES = $(wildcard figures/*.png)
 

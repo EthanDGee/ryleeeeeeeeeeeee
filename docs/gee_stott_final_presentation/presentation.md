@@ -138,14 +138,24 @@ style: |
 
 # Methodology - Proposed Solution
 
-We believes we can still maintain similar performance, and add features to the Maia model while significantly reducing model size.
+> We hypothesizes we can maintain similar performance, and add features to the Maia model while significantly reducing model size.
 
 <img src="./figures/high_level.png" width="1000">
 
+<div class="columns">
+<div>
+
 1. Pull data from Lichess
 2. Preprocess games
+
+</div>
+<div>
+
 3. Feed data into NN
 4. Predict moves
+
+</div>
+</div>
 
 ---
 
@@ -192,13 +202,16 @@ We believes we can still maintain similar performance, and add features to the M
 
 <img src="./figures/nn_architecture.png" width="600">
 
+- **Input**: Board(8x8x12) + Metadata(4)
+
 </div>
 <div>
 
-- **Input**: Board(8x8x12) + Metadata(4)
 - **Conv Layers**: 6 64x8x8 filters, ReLU
 - **Fully Connected**: 4100 -> 512 -> 32
 - **Output Heads**: Move (2104) + Auxiliary (2104)
+  - Move Head = predicted chess move
+  - Aux Head = predicted legal chess moves
   - 2104 is the number of legal moves
 - **Loss**: CrossEntropy (moves) + BCE (valid moves)
 - **Optimizer**: Adam
@@ -253,14 +266,14 @@ We believes we can still maintain similar performance, and add features to the M
 
 # Experiments - Architecture
 
-### Small Fully Connected Model
-A Small model that had a similar architecture to StockFish
+**Small Fully Connected Model**
+- A Small model that had a similar architecture to StockFish
 - 8 fully connected layers of 32 neurons
 
-### Convolutional Model
+**Convolutional Model**
 - Combination of Convolution and fully connected to mirror human cognition
 
-### Convolution with Auxillary Head
+**Convolution with Auxillary Head**
 - Added an auxillary head that determines legal moves to instill better game understanding
 
 ---
@@ -345,6 +358,8 @@ We have a tkinter gui. Here is it running on a crappy laptop. Black is Rylee and
 **Model Improvements**
 - Add data augmentation (board flips and rotations) to improve robustness
 - Time parameter to better address time based decision making
+- Cross Validation
+  - Maia was not able to do this because of the size of the dataset
 
 **Additional Features**
 - **ELO Prediction:** Estimate player rating from move patterns to quickly adapt to player skill
@@ -388,6 +403,19 @@ We have a tkinter gui. Here is it running on a crappy laptop. Black is Rylee and
 
 </div>
 </div>
+
+---
+
+# Terminology
+
+- **ELO Rating** - Numeric chess player skill score used to represent player strength (500 beginner, 1500 intermediate, 2500 expert)
+- **Board Snapshot** - A single chess board state (imagine taking a picture of the board every time a player makes a move, each of those pictures should be a board snapshot)
+- **Action Space (2104 moves)** - Fixed index set representing all possible legal chess moves
+- **Auxiliary Head** - Secondary output predicting legal moves to guide the main move head. Meant to strengthen legal move connections/predictions.
+- **Opening Phase** - The first 10ish moves of the game
+- **Blunder** - An objectively terrible chess move
+- **Lichess Dataset** - Large open database of real human chess games
+- **Human-Aligned Model** - Predicts human-like moves rather than optimal engine moves
 
 ---
 
