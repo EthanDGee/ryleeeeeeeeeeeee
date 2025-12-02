@@ -1,5 +1,5 @@
 [project]
-name = "human-chessbot"
+name = "rylee"
 version = "0.1.0"
 description = "A chess application with multiple engines and interfaces"
 readme = "README.md"

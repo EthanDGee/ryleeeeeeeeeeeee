@@ -82,26 +82,32 @@ The training entrypoint takes a single argument: the path to a JSON configuratio
 
 ```json
 {
-  "num_iterations": 5,
+  "num_iterations": 1000,
+  "cuda_enabled": true,
   "hyperparameters": {
-    "learning_rates": [0.01, 0.001, 0.0005, 0.0001],
-    "decay_rates": [0, 0.1, 1e-4, 1e-6],
-    "betas": [0.8, 0.9, 0.95, 0.9999],
-    "momentums": [0.5, 0.9, 0.95, 0.99],
+    "learning_rates": [],
+    "decay_rates": [],
+    "betas": [],
+    "momentums": [],
     "num_epochs": 100,
-    "batch_size": 128,
-    "num_workers": 4
+    "batch_size": 0,
+    "num_workers": 0
   },
   "database_info": {
-    "num_indexes": 10000,
+    "num_indexes": 100000,
     "max_size_gb": 10,
-    "data_split": {"train": 0.8, "validation": 0.1, "test": 0.1}
+    "data_split": {
+      "train": 0.8,
+      "validation": 0.1,
+      "test": 0.1
+    }
   },
   "checkpoints": {
-    "directory": "runs/",
-    "auto_save_interval": 100
+    "directory": "",
+    "auto_save_interval": 0
   }
 }
+
 ```
 
 ### Field descriptions
@@ -156,6 +162,14 @@ runs/
 - Model name encodes the active hyperparameters for that run.
 - `saves.csv` columns: `version_name,learning_rate,decay_rate,beta,momentum,train_loss,train_accuracy,val_loss,val_accuracy`.
 - Console logs include per-save metrics and a final summary of the best hyperparameters found.
+
+### Further Training
+
+If for whatever reason you wish to begin training using a starting model (e.g. transfer learning, restarting from a checkpoint) by appending the path to the train argument the model will that model as the basis.
+
+```bash
+python -m packages.train.src.train.main config,json starting_model.pth
+```
 
 ### Tips
 
