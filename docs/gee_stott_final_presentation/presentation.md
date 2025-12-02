@@ -71,7 +71,7 @@ style: |
 
 <!-- _class: lead -->
 
-# Creating a Deployable Human-Like Chess Engine to Enhance the Learning Experience
+# Rylee: Creating a Deployable Human-Like Chess Engine to Enhance the Learning Experience
 
 **Ethan Gee & Nate Stott**
 
