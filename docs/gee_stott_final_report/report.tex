@@ -62,7 +62,7 @@ While the pursuit of optimal play has been the primary focus of chess engine dev
 
 \subsection{Dataset and Training Data}
 
-The Lichess database has emerged as the standard dataset for human chess modeling research. As a publicly available collection of games from the Lichess.org platform, it provides unprecedented scale and diversity---containing billions of games spanning a wide range of player skill levels from beginner to grandmaster. The dataset's completeness makes it particularly valuable: each game includes not only move sequences in Portable Game Notation (PGN) format, but also player ELO ratings, game outcomes, time controls, and temporal information.
+The Lichess database has emerged as the standard dataset for human chess modeling research, providing unprecedented scale and diversity spanning a wide range of player skill levels from beginner to grandmaster.
 
 Prior work has leveraged this dataset extensively. The Maia Project utilized 169 million Lichess games filtered to specific rating bands (1100-1900 ELO) and game types (blitz time controls only), training separate models for each 100-point rating interval. This approach enabled rating-specific modeling but required substantial computational resources for data processing and model training. Other researchers have used the Lichess dataset for opening theory analysis, playing style detection, and cheat detection, demonstrating its versatility beyond move prediction tasks.
 
@@ -70,11 +70,11 @@ Prior work has leveraged this dataset extensively. The Maia Project utilized 169
 
 \subsection{System Architecture}
 
-We structured our work on the chess engine Rylee around three core components: data processing, model training, and deployment into a playable environment. First, we automated the download of Lichess data files and passed them through a preparation pipeline, converting them into standardized, train-ready formats and storing the processed results in a database. During training, the model draws directly from this preprocessed dataset, eliminating the need to re-run the preparation pipeline and allowing us to iterate on model architecture and training configurations efficiently. Finally, the trained model is deployed into an interactive environment where it can be evaluated through live play.
+We created Rylee, a chess engine, which can process Lichess data, train with tunable parameters, and deploy into a playable environment. First, automating Lichess game file downloads, then processing to a consumption ready format stored in the database. Model training draws directly from this preprocessed dataset via a custom Pytorch Dataset class. Lastly, models can be manually evaluated using a custom chess game implementation; a human, Stockfish, or Leela player can be used as the opposing player.
 
 \begin{figure}[htbp]
 \centerline{\includegraphics[width=\linewidth]{figures/high_level.png}}
-\caption{High-level system architecture showing the data flow from Lichess games through preprocessing to neural network training and move prediction.}
+\caption{A High level system architecture diagram showcasing the full data flow from Lichess and processing to training and move prediction.}
 \label{fig:highlevel}
 \end{figure}
 
@@ -82,81 +82,48 @@ We structured our work on the chess engine Rylee around three core components: d
 
 \subsubsection{PGN File Processing}
 
-Lichess data is stored in the form of PGN files. PGN or Portable Game Notation is made up of 2 parts the tag pairs, which stores game metadata about the game and players, and the move strings of the game stored in UCI.
+Lichess data is stored in Portable Game Notation (PGN) files. PGN is made up of two parts the tag pairs, which stores game metadata (e.g. game duration, white player elo, winner), and the move sequence (e.g. e2e4, e1g1) stored in Universal Chess Interface (UCI).
 
-To make this data usable we stored the players elos, which is a measure of their skill. Then we iterate through the game storing ``snapshots'' of the board at every state, and the move taken by the current player at that position. The board states are then represented as 3 dimensional tensors that are 8 by 8 (due to the size of the board) with 12 channels with 6 channels for each of the white pieces and 6 for the black.
+For each game useful tags are extracted including the players elos. Next we go though the UCI section creating ``snapshots'' of the board at every step, we combine the snapshots with the move the player made on their turn, and the elo of both players (we call this metadata). Finally each board snapshot and metadata pair are represented using three dimensional tensors that are 8 by 8 (due to the size of the board) with 12 channels (6 channels for the white pieces and 6 for black).
 
 \begin{figure}[htbp]
 \centerline{\includegraphics[width=\linewidth]{figures/data_pipeline.png}}
-\caption{Data processing pipeline from raw Lichess PGN files to neural network training data, including game parsing, snapshot extraction, and encoding.}
+\caption{A detailed data processing pipeline diagram showcasing the process starting from Lichess PGN files to neural network training data. Steps include file parsing, snapshot and metadata extraction, and encoding.}
 \label{fig:pipeline}
 \end{figure}
 
 \subsection{Neural Network Architecture}
 
-The neural network architecture consists of three main components: a convolutional backbone for processing board states, a fully connected network for feature extraction, and dual output heads for move prediction and auxiliary tasks.
+The neural network architecture consists of three main sections: convolutional layers for processing board piece positions (pieces are spatially related), a fully connected network for feature learning and dimensionality reduction, and two output heads for human move and auxiliary predictions (predicting the legal moves available to the player).
 
-The convolutional backbone processes the 8$\times$8$\times$12 board representation through six convolutional layers. Each layer uses 64 filters with 8$\times$8 kernels, maintaining the spatial dimensions through ``same'' padding. ReLU activation functions are applied after each convolution to introduce non-linearity.
+The convolutional section processes the 8$\times$8$\times$12 encoded board through six convolutional layers. Each layer uses 64 filters with 8$\times$8 kernels utilizing ``same'' padding. After each convolution, ReLU activation functions are applied to ensure non-linearity.
 
-The fully connected portion begins with a 4100-dimensional input (flattened board features plus metadata) and progressively reduces dimensionality through six layers (512$\rightarrow$32$\rightarrow$32$\rightarrow$32$\rightarrow$32$\rightarrow$32) with ReLU activations. This creates a compact 32-dimensional representation of the game state.
+The fully connected section starts with a 4100-dimensional input (flattened board features + metadata) and progressively reduces dimensionality through six layers (512$\rightarrow$32$\rightarrow$32$\rightarrow$32$\rightarrow$32$\rightarrow$32) with ReLU activations. This creates a 32-dimensional embedding of the board state and metadata.
 
-The network splits into two parallel output heads:
-\begin{enumerate}
-\item Move prediction head: Maps the 32-dimensional state to 2104 move probabilities
-\item Auxiliary prediction head: Produces all legal moves predicted for the current board snapshot
-\end{enumerate}
-
-Input representation:
-\begin{itemize}
-\item Board state: 8$\times$8$\times$12 tensor (6 piece types $\times$ 2 colors)
-\item Metadata: Player ratings (elo) and game state information
-\item Combined input: 4100 dimensions (4096 from board + 4 metadata features)
-\end{itemize}
-
-Output representation:
-\begin{itemize}
-\item 2104-dimensional probability distribution over legal moves
-\item Softmax activation ensures valid probability distribution
-\item Auxiliary head provides legal move predictions to augment learning process
-\end{itemize}
-
-The architecture balances computational efficiency with sufficient complexity to capture chess patterns and human play styles. The dual head design allows simultaneous learning of move prediction and auxiliary chess concepts.
+This architecture balances efficiency and complexity to capture human chess playing patterns. The dual head design allows complemented learning of move prediction with the learning of chess rules.
 
 \begin{figure}[htbp]
 \centerline{\includegraphics[width=0.8\linewidth]{figures/nn_architecture.png}}
-\caption{Neural network architecture showing the convolutional backbone, flatten layer, fully connected layers, and dual output heads for move prediction and auxiliary legal move prediction.}
+\caption{A neural network architecture diagram showcasing the convolutional, flatten, fully connected layers, with the dual output heads for player move and legal move predictions.}
 \label{fig:nnarch}
 \end{figure}
 
 \subsection{Training Process}
 
-\subsubsection{Implementation Details}
-
-The training implementation utilizes PyTorch's ecosystem for deep learning. The training pipeline is encapsulated in a Trainer class that handles data loading, model training, evaluation, and checkpointing. Key components include:
-
-\begin{itemize}
-\item Data loading with PyTorch DataLoaders for efficient batch processing
-\item Adam optimizer with configurable learning rate and weight decay
-\item Cross-entropy loss for both move prediction and valid moves
-\item Automatic checkpointing and performance logging
-\item GPU acceleration when available
-\end{itemize}
-
 \subsubsection{Training Parameters}
 
-The model was trained with the following configuration:
+Began training model with the following configurations:
 \begin{itemize}
 \item Batch size: 512
 \item Initial learning rate: 0.001
 \item Weight decay: 1e-4
 \item Beta parameters: (0.9, 0.999)
 \item Number of epochs: 50
-\item Data split: 80\% training, 10\% validation, 10\% test
 \end{itemize}
 
 \subsubsection{Optimization Strategy}
 
-We employed random search for hyperparameter optimization, exploring combinations of:
+The explodable combinations used on the random search for hyperparameter optimization:
 \begin{itemize}
 \item Learning rates: [0.1, 0.01, 0.001, 0.0001]
 \item Weight decay rates: [1e-3, 1e-4, 1e-5]
@@ -164,12 +131,11 @@ We employed random search for hyperparameter optimization, exploring combination
 \item Momentum values: [0.9, 0.95, 0.99]
 \end{itemize}
 
-The best performing configuration was selected based on validation loss.
+The best configuration was determined by the lowest validation loss.
 
 \subsubsection{Hardware Configuration}
 
-Training was conducted on embedded AI hardware:
-
+Training was done on embedded hardware (keep in mind a Jetson Orin Nano is pretty close to a Raspberry Pi):
 \begin{itemize}
 \item Platform: NVIDIA Jetson Orin Nano 8GB Developer Kit
 \item GPU: 1024-core NVIDIA Ampere architecture GPU
@@ -177,8 +143,6 @@ Training was conducted on embedded AI hardware:
 \item RAM: 8GB 128-bit LPDDR5
 \item Storage: 64GB eMMC 5.1
 \end{itemize}
-
-This setup processed approximately 10,000 snapshots per second during training.
 
 \section{Experiments}
 
@@ -202,47 +166,21 @@ We also didn't limit the model to just the blitz games as we wanted to increase 
 \label{fig:timecontrol}
 \end{figure}
 
-The Lichess dataset used in this project consists of over 7 billion chess games played on the Lichess.org platform between 2013-2025. Key characteristics:
-
-\begin{itemize}
-\item Total size: ~2TB of compressed game data
-\item Game format: Portable Game Notation (PGN)
-\item Rating range: 700-2500 ELO
-\item Game types: Classical, Rapid, Blitz, and Bullet time controls
-\item Key fields per game:
-\begin{itemize}
-\item Player ELO ratings
-\item Move sequences in UCI format
-\item Game result
-\item Time control
-\item Opening classification
-\item Timestamps
-\end{itemize}
-\end{itemize}
-
 For training, we used 15,167 human-rated games from January of 2013 from players rated 700-2500 ELO, generating approximately 1 million board snapshots. The dataset was split into 80\% training (800,000 snapshots), 10\% validation (100,000 snapshots), and 10\% test (100,000 snapshots). Games were validated to remove incomplete or corrupted entries.
-
-Data processing pipeline:
-\begin{enumerate}
-\item PGN parsing and validation
-\item Feature extraction (board states, moves, metadata)
-\item Train/validation/test splitting (80/10/10)
-\item Normalization of numerical features
-\end{enumerate}
 
 \subsection{Baseline Description}
 
 To evaluate Rylee's performance in predicting human-like moves, we compared against five baseline models representing different approaches to chess move prediction:
 
-\textbf{Random Move Selection:} As a lower bound, we implemented a baseline that randomly selects from all legal moves in a given position. This achieved approximately 6\% accuracy, reflecting the average branching factor in chess positions.
+\textbf{Random Move Selection:} As a lower bound, we implemented a baseline that randomly selects from all legal moves in a given position, reflecting the average branching factor in chess positions.
 
-\textbf{Random Forest Classifier:} We trained a Random Forest model on the same dataset to establish a classical machine learning baseline. Using board state features and metadata, this model achieved 13\% accuracy, demonstrating that simple pattern recognition can capture some human behavior but falls short of deep learning approaches.
+\textbf{Random Forest Classifier:} We trained a Random Forest model on the same dataset to establish a classical machine learning baseline, demonstrating that simple pattern recognition can capture some human behavior but falls short of deep learning approaches.
 
-\textbf{Stockfish 15:} A traditional minimax-based chess engine with alpha-beta pruning and hand-crafted evaluation functions. While Stockfish plays near-perfect chess, its moves matched human choices only 40\% of the time, confirming that optimal play differs significantly from human play.
+\textbf{Stockfish 15:} A traditional minimax-based chess engine with alpha-beta pruning and hand-crafted evaluation functions. While Stockfish plays near-perfect chess, confirming that optimal play differs significantly from human play.
 
-\textbf{Leela Chess Zero (LC0) 4200:} A neural network-based engine trained through self-play reinforcement learning, similar to AlphaZero. Despite using neural networks, LC0 achieved only 44\% alignment with human moves, as it optimizes for winning rather than human-like behavior.
+\textbf{Leela Chess Zero (LC0) 4200:} A neural network-based engine trained through self-play reinforcement learning, similar to AlphaZero. Despite using neural networks, LC0 optimizes for winning rather than human-like behavior.
 
-\textbf{Maia-1 1500:} The primary comparison point for our work. Maia-1 is a supervised learning model specifically trained to predict human moves at the 1500 ELO level. It achieved 51\% Top-1 accuracy but requires 25 million parameters and substantial computational resources for training.
+\textbf{Maia-1 1500:} The primary comparison point for our work. Maia-1 is a supervised learning model specifically trained to predict human moves at the 1500 ELO level, requiring 25 million parameters and substantial computational resources for training.
 
 \textbf{Evaluation Metrics:} We use Top-1 accuracy (percentage of positions where the predicted move exactly matches the human move) and Top-5 accuracy (percentage where the human move appears in the top 5 predictions) as our primary metrics. These directly measure alignment with human decision-making. We also report filtered accuracy, which excludes noisy board states (blitz games only, exclude first 10 moves, filter games between narrow ELO ranges).
 
@@ -315,37 +253,20 @@ A key contribution of this work is demonstrating that human-aligned chess AI can
 \begin{itemize}
 \item \textbf{Training Time:} 2-3 days on NVIDIA Jetson Orin Nano (vs. 3-4 weeks for Maia on dual A100 GPUs)
 \item \textbf{Preprocessing Time:} 1.5 hours (vs. 8 days for Maia)
-\item \textbf{Model Size:} 800,000 parameters (vs. 25 million for Maia)
+\item \textbf{Model Size:} 800,000 parameters (30$\times$ smaller than Maia)
 \item \textbf{Inference Speed:} ~10,000 positions/second on edge hardware
 \item \textbf{Memory Footprint:} <50MB for model weights (deployable on Chromebooks and Raspberry Pi)
 \end{itemize}
 
 \subsubsection{Comparison to State-of-the-Art}
 
-While Rylee's 25\% Top-1 accuracy is lower than Maia's 51\%, this comparison must be contextualized:
-
-\begin{enumerate}
-\item Rylee uses 30$\times$ fewer parameters (800K vs. 25M)
-\item Rylee trains on 15,167 games vs. Maia's 169 million games
-\item Rylee includes diverse game types (blitz, rapid, classical) while Maia filters to only blitz
-\item Rylee covers broader ELO range (700-2500 vs. 1100-1900)
-\item Rylee includes opening moves (first 10 moves) which Maia cannot predict
-\item Rylee trains in days on edge devices vs. weeks on data center GPUs
-\end{enumerate}
-
-The performance gap is expected given these constraints, but Rylee's 51\% Top-5 accuracy demonstrates that it captures human-like thinking in over half of positions when considering the top 5 candidate moves.
+While Rylee's Top-1 accuracy is lower than Maia's, this comparison must be contextualized by the substantial differences in model size, training data scale, and computational requirements detailed above. The performance gap is expected given these constraints, but Rylee's Top-5 accuracy demonstrates that it captures human-like thinking in over half of positions when considering the top 5 candidate moves.
 
 \section{Conclusion and Future Work}
 
 \subsection{Summary}
 
-This work set out to address a fundamental challenge in human-AI interaction: creating a chess engine that plays like a human rather than a superhuman, while being practical enough to deploy on consumer hardware. Traditional chess engines, optimized for perfect play, provide limited educational value, while existing human-aligned models like Maia require substantial computational resources that restrict their accessibility.
-
-We successfully developed Rylee, a compact neural network-based chess engine that achieves 25\% Top-1 accuracy and 51\% Top-5 accuracy in predicting human moves. Using only 800,000 parameters---30 times smaller than Maia's 25 million---Rylee can be trained in 2-3 days on edge devices like the NVIDIA Jetson Orin Nano and deployed on standard consumer hardware including Chromebooks and Raspberry Pi devices. The model demonstrates strong generalization with minimal overfitting between training (27\% Top-1) and validation (25\% Top-1) sets.
-
-Beyond computational efficiency, Rylee extends Maia's capabilities by including opening move predictions (first 10 moves), supporting a broader player base (700-2500 ELO vs. 1100-1900), and incorporating diverse game types rather than filtering to only blitz chess. These enhancements make Rylee more practical for real-world educational applications where students play varied game types and need guidance across all game phases.
-
-While Rylee's accuracy is lower than Maia's 51\%, this gap is expected given the 30x parameter reduction and significantly less training data (15,000 games vs. millions). The key achievement is demonstrating that meaningful human-aligned behavior can be captured with far fewer resources, opening the door to accessible AI-based chess training tools. Limitations include the accuracy gap compared to larger models, and training on a limited time range of data (January 2013).
+We successfully developed Rylee, a compact neural network-based chess engine for human-aligned chess training. The key achievement is demonstrating that meaningful human-aligned behavior can be captured with far fewer resources than existing approaches, opening the door to accessible AI-based chess training tools. Limitations include the accuracy gap compared to larger models, and training on a limited time range of data (January 2013).
 
 \subsection{Future Work}
 
@@ -385,11 +306,9 @@ Several architectural enhancements could improve Rylee's accuracy while maintain
 
 \subsection{Concluding Remarks}
 
-This work demonstrates that human-aligned AI systems can be made practical and accessible without requiring data center infrastructure. By achieving 25\% Top-1 accuracy with a 30x smaller model trainable on edge devices, Rylee proves that meaningful human-AI alignment is possible within severe computational constraints. The key insight is that perfect alignment is unnecessary---capturing enough human-like behavior to create an engaging, educational experience requires far fewer resources than previously thought.
+This work demonstrates that human-aligned AI systems can be made practical and accessible without requiring data center infrastructure. The key insight is that perfect alignment is unnecessary---capturing enough human-like behavior to create an engaging, educational experience requires far fewer resources than previously thought.
 
-Beyond chess, this research has broader implications for democratizing AI development and deployment. Many applications benefit more from human-aligned behavior than superhuman performance: tutoring systems in education, collaborative decision support in medicine, and AI assistants in creative domains all prioritize complementing human thinking over replacing it. Rylee's approach---supervised learning on human behavior data with compact architectures---provides a template for building such systems across domains.
-
-The accessibility of Rylee enables new use cases: school chess clubs can run it on Chromebooks, developing world class chess engines can be done on Raspberry Pi devices costing under \$50, and students can train with it on their smartphones. By removing the computational barriers to human-aligned AI, this work takes a step toward making AI-enhanced learning accessible globally rather than limited to well-resourced institutions.
+Beyond chess, this research has broader implications for democratizing AI development and deployment. Many applications benefit more from human-aligned behavior than superhuman performance: tutoring systems in education, collaborative decision support in medicine, and AI assistants in creative domains all prioritize complementing human thinking over replacing it.
 
 Most importantly, this project validates a key principle in AI development: that constraint-driven design can yield innovations with broad impact. The requirement to run on edge devices forced architectural decisions that not only achieved deployability but also resulted in faster training, easier debugging, and more interpretable behavior. As AI systems grow larger and more resource-intensive, approaches like Rylee's remind us that smaller, focused models trained on curated data can deliver substantial value for specific applications---and that accessibility and alignment may matter more than raw performance for many real-world use cases.
 
