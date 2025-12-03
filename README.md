@@ -24,6 +24,9 @@ source .venv/bin/activate  # Windows: .venv\Scripts\activate
 pip install -e .
 pre-commit install
 
+# Build Legal Moves Database
+python -m packages.train.src.dataset.fillers.fill_legal_moves
+
 # Run chess application
 python -m packages.play.src.main
 ```

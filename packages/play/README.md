@@ -12,6 +12,11 @@ Interactive chess application with multiple engines and interfaces.
 
 ## Usage
 
+### Database set up
+```bash
+python -m packages.train.src.fillers.fill_legal_moves
+```
+
 ```bash
 python -m packages.play.src.main              # GUI (default)
 python -m packages.play.src.main --ui cli     # CLI
