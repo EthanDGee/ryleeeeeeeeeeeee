@@ -1,0 +1,43 @@
+{
+  "cuda_enabled": false,
+  "num_iterations": 1,
+  "hyperparameters": {
+    "learning_rates": [
+      0.01
+    ],
+    "decay_rates": [
+      0,
+      0.1,
+      1e-4,
+      1e-6
+    ],
+    "betas": [
+      0.8,
+      0.9,
+      0.95,
+      0.9999
+    ],
+    "momentums": [
+      0.5,
+      0.9,
+      0.95,
+      0.99
+    ],
+    "num_epochs": 10,
+    "batch_size": 1000,
+    "num_workers": 4
+  },
+  "database_info": {
+    "num_indexes": 10000,
+    "max_size_gb": 10,
+    "data_split": {
+      "train": 0.98,
+      "validation": 0.01,
+      "test": 0.01
+    }
+  },
+  "checkpoints": {
+    "directory": "analysis/",
+    "auto_save_interval": 10000
+  }
+}
