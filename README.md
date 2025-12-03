@@ -17,15 +17,18 @@ Rylee is a chess application suite with multiple engines, data processing tools,
 # Clone and setup
 git clone <repository-url>
 cd rylee
-python -m venv .venv
-source .venv/bin/activate  # Windows: .venv\Scripts\activate
+poetry install --no-root
 
-# Install
-pip install -e .
-pre-commit install
+# Setup the configs
+cp packages/convert/.env.example packages/convert/.env
+cp packages/play/.env.example packages/play/.env
+cp packages/train/.env.example packages/train/.env
+# See config.json if you want to tweak the training configs
 
 # Run chess application
-python -m packages.play.src.main
+poetry run python -m packages.train.src.dataset.main
+poetry run python -m packages.play.src.main
+poetry run poetry -m packages.train.src.train.main
 ```
 
 ## Project Structure
@@ -43,50 +46,14 @@ rylee/
 ## Packages
 
 ### [Play](packages/play/README.md)
+
 Interactive chess game with Stockfish, LCZero, and random bot support.
 
 ### [Convert](packages/convert/README.md)
+
 PGN file combination and conversion to CSV for ML training.
 
 ### [Train](packages/train/README.md)
+
 ML training pipeline and Lichess dataset ETL.
 
-## Development
-
-**Requirements**: Python 3.12+, optional: Stockfish/LCZero engines
-
-### Running Tests
-
-```bash
-pytest packages/*/tests/ -v                          # All tests
-pytest packages/play/tests/ -v                       # Specific package
-pytest packages/*/tests/ --cov=packages --cov-report=html  # With coverage
-```
-
-### Code Quality
-
-Pre-commit hooks run automatically on commit (ruff, black, isort, mypy). Run manually:
-
-```bash
-pre-commit run --all-files  # All hooks
-ruff check packages/        # Lint only
-black packages/             # Format only
-mypy packages/              # Type check only
-```
-
-### Contributing
-
-1. Fork repository and create feature branch
-2. Install: `pip install -e . && pre-commit install`
-3. Make changes and write tests
-4. Ensure hooks and tests pass
-5. Submit pull request
-
-**Guidelines**: Write tests for new features, follow existing code style, update docs as needed.
-
-## Documentation
-
-- [Development Guide](docs/development.md) - Detailed setup and workflow
-- [Play Package](packages/play/README.md) - Chess game documentation
-- [Convert Package](packages/convert/README.md) - Data conversion tools
-- [Train Package](packages/train/README.md) - ML training pipeline
