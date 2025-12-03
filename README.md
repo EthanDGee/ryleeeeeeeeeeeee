@@ -28,7 +28,7 @@ cp packages/train/.env.example packages/train/.env
 # Run chess application
 poetry run python -m packages.train.src.dataset.main
 poetry run python -m packages.play.src.main
-poetry run poetry -m packages.train.src.train.main
+poetry run python -m packages.train.src.train.main
 ```
 
 ## Project Structure
