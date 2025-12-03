@@ -113,6 +113,9 @@ docs/_templates/
 tmp/
 temp/
 
+**/config.json
+!config.json
+
 charts/
 analysis/
 message.txt
