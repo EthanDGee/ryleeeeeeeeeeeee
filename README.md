@@ -25,6 +25,9 @@ cp packages/play/.env.example packages/play/.env
 cp packages/train/.env.example packages/train/.env
 # See config.json if you want to tweak the training configs
 
+# Build Legal Moves Database
+python -m packages.train.src.dataset.fillers.fill_legal_moves
+
 # Run chess application
 poetry run python -m packages.train.src.dataset.main
 poetry run python -m packages.play.src.main
