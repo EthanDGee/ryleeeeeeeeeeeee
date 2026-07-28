@@ -5,7 +5,7 @@ Usage:
     python -m packages.dataset.src.utils.fill_legal_moves
 """
 
-from packages.train.src.dataset.processers.legal_moves import get_legal_moves
+from packages.train.src.dataset.processors.legal_moves import get_legal_moves
 from packages.train.src.dataset.repositories.database import initialize_database
 from packages.train.src.dataset.repositories.legal_move import count_legal_moves, save_legal_moves
 

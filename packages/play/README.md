@@ -13,6 +13,7 @@ Interactive chess application with multiple engines and interfaces.
 ## Usage
 
 ### Database set up
+
 ```bash
 python -m packages.train.src.fillers.fill_legal_moves
 ```
@@ -26,6 +27,7 @@ python -m packages.play.src.main --time-limit 300 --save-dir ~/games
 ## Engine Setup
 
 **Stockfish** (recommended):
+
 ```bash
 sudo apt install stockfish  # Linux
 brew install stockfish      # macOS
@@ -42,7 +44,7 @@ pytest packages/play/tests/ --cov=packages.play --cov-report=html
 
 ## Structure
 
-```
+```text
 play/
 ├── src/
 │   ├── main.py      # Entry point

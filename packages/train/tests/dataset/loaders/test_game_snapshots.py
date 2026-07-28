@@ -3,7 +3,7 @@ from unittest.mock import patch
 import pytest
 
 from packages.train.src.dataset.loaders.game_snapshots import GameSnapshotsDataset
-from packages.train.src.dataset.processers.processed_snapshots import ProcessedSnapshotsProcessor
+from packages.train.src.dataset.processors.processed_snapshots import ProcessedSnapshotsProcessor
 
 
 class TestGameSnapshotsDataset:

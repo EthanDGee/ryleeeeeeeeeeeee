@@ -14,7 +14,7 @@ pytest packages/*/tests/ -v  # Verify setup
 
 ## Project Structure
 
-```
+```text
 human-chessbot/
 ├── packages/
 │   ├── play/       # Chess game application
@@ -112,6 +112,7 @@ def apply_move(self, move: chess.Move) -> str:
 ### Add Dependency
 
 Edit `pyproject.toml` dependencies section, then:
+
 ```bash
 pip install -e .
 ```
@@ -132,7 +133,7 @@ touch packages/mypackage/README.md
 ## Troubleshooting
 
 | Issue | Solution |
-|-------|----------|
+| ------- | ---------- |
 | Import errors | `pip install -e .` |
 | Test failures | `rm -rf .pytest_cache && pip install -e .` |
 | Formatting conflicts | `pre-commit run --all-files` |

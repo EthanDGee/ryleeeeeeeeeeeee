@@ -5,16 +5,18 @@ Comprehensive testing practices for the play package.
 ## Running Tests
 
 ```bash
-pytest packages/play/tests/ -v                              # All tests
-pytest packages/play/tests/ --cov=packages/play/src --cov-report=html  # With coverage
-pytest packages/play/tests/player/test_player.py::TestPlayer::test_initialization  # Specific test
-pytest -k "test_player"                                     # By pattern
-pytest -m "not slow"                                        # Exclude slow tests
+pytest packages/play/tests/ -v  # All tests
+pytest packages/play/tests/ --cov=packages/play/src \
+  --cov-report=html  # With coverage
+pytest packages/play/tests/player/test_player.py::TestPlayer::test_initialization
+# Specific test
+pytest -k "test_player"  # By pattern
+pytest -m "not slow"  # Exclude slow tests
 ```
 
 ## Test Structure
 
-```
+```text
 packages/play/tests/
 ├── conftest.py          # Shared fixtures
 ├── player/              # Player tests
@@ -80,6 +82,7 @@ def test_with_mock():
 - **UI code**: 60%+
 
 View coverage report:
+
 ```bash
 pytest --cov=packages/play/src --cov-report=html
 open htmlcov/index.html
@@ -98,7 +101,7 @@ open htmlcov/index.html
 ## Troubleshooting
 
 | Issue | Solution |
-|-------|----------|
+| ------- | ---------- |
 | Import errors | Run from project root: `pytest packages/play/tests/` |
 | GUI tests fail | Skip with: `pytest -k "not gui"` |
 | Slow execution | Skip slow tests: `pytest -m "not slow"` |

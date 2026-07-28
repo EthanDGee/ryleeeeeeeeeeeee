@@ -1,7 +1,7 @@
-"""Tests for game_snapshots processer."""
+"""Tests for game_snapshots processor."""
 
 from packages.train.src.dataset.models.raw_game import RawGame
-from packages.train.src.dataset.processers.game_snapshots import _safe_int, raw_game_to_snapshots
+from packages.train.src.dataset.processors.game_snapshots import _safe_int, raw_game_to_snapshots
 
 
 class TestSafeInt:

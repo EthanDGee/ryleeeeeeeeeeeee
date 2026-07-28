@@ -11,13 +11,14 @@ python -m packages.train.src.train.main config.json
 See `exampleConfig.json`. Key fields:
 
 - `num_iterations`: Random search iterations
-- `hyperparameters`: learning_rates, decay_rates, betas, momentums, num_epochs, batch_size
+- `hyperparameters`: learning_rates, decay_rates, betas, momentums,
+  num_epochs, batch_size
 - `database_info`: num_indexes, data_split (train/val/test ratios)
 - `checkpoints`: directory, auto_save_interval (seconds)
 
 ## Output
 
-```
+```text
 output_dir/
 ├── trained_models/<model_name>/
 │   ├── *.pth                 # Model weights

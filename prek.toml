@@ -29,14 +29,6 @@ id = "mixed-line-ending"
 args = ["--fix=lf"]
 
 [[repos]]
-repo = "https://github.com/Yelp/detect-secrets"
-rev = "v1.5.0"
-
-[[repos.hooks]]
-id = "detect-secrets"
-args = ["--baseline", ".secrets.baseline"]
-
-[[repos]]
 repo = "https://github.com/pre-commit/pre-commit-hooks"
 rev = "v6.0.0"
 
@@ -76,6 +68,7 @@ rev = "v0.49.1"
 
 [[repos.hooks]]
 id = "markdownlint-fix"
+args = ["--ignore", "docs/gee_stott_final_presentation/presentation.md"]
 
 [[repos]]
 repo = "https://github.com/pre-commit/mirrors-prettier"

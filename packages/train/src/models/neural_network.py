@@ -36,7 +36,7 @@ class NeuralNetwork(nn.Module):
             nn.ReLU(),
         )
 
-        # here we split into two heads to handle move and auxilary predictions separately
+        # here we split into two heads to handle move and auxiliary predictions separately
         self.move_head = nn.Sequential(nn.Linear(32, 2104))
         self.auxiliary_head = nn.Sequential(nn.Linear(32, 2104))
 

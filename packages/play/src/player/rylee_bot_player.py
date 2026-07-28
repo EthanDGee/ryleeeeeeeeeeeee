@@ -9,7 +9,7 @@ import torch
 from packages.play.src.constants import RYLEE_MODEL_PATH, RYLEE_SKILL_LEVEL
 from packages.play.src.player.player import Player, PlayerConfig
 from packages.train.src.dataset.loaders.legal_moves import LegalMovesDataset
-from packages.train.src.dataset.processers.processed_snapshots import ProcessedSnapshotsProcessor
+from packages.train.src.dataset.processors.processed_snapshots import ProcessedSnapshotsProcessor
 from packages.train.src.models.neural_network import NeuralNetwork
 
 

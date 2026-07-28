@@ -5,7 +5,7 @@ from packages.train.src.constants import (
     DEFAULT_PRINT_INTERVAL,
     DEFAULT_SNAPSHOTS_THRESHOLD,
 )
-from packages.train.src.dataset.processers.processed_snapshots import ProcessedSnapshotsProcessor
+from packages.train.src.dataset.processors.processed_snapshots import ProcessedSnapshotsProcessor
 from packages.train.src.dataset.repositories.database import initialize_database
 from packages.train.src.dataset.repositories.game_snapshots import (
     count_snapshots,

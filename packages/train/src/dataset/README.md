@@ -1,15 +1,17 @@
 # Dataset Module
 
-Data pipeline for fetching Lichess games, storing in SQLite, and loading for PyTorch training.
+Data pipeline for fetching Lichess games, storing in SQLite, and loading
+for PyTorch training.
 
 ## Structure
 
-```
+```text
 dataset/
-  models/        - Data classes (FileMetadata, RawGame, GameSnapshot, GameStatistics, LegalMove)
+  models/        - Data classes (FileMetadata, RawGame, GameSnapshot,
+                   GameStatistics, LegalMove)
   repositories/  - SQLite CRUD operations
   requesters/    - Lichess API fetching
-  processers/    - PGN parsing and move generation
+  processors/    - PGN parsing and move generation
   fillers/       - Database population scripts
   loaders/       - PyTorch Dataset classes
   plotter.py     - ELO distribution plotting
@@ -17,22 +19,24 @@ dataset/
 
 ## Data Flow
 
-```
-+----------------+      +----------------+      +----------------+      +------------------+
-|  Lichess API   |----->| files_metadata |----->|   raw_games    |----->|  game_snapshots  |
-| (counts.txt)   |      |     table      |      |     table      |      |      table       |
-+----------------+      +----------------+      +-------+--------+      +------------------+
+```text
++----------------+      +----------------+      +----------------+
+|  Lichess API   |----->| files_metadata |----->|   raw_games    |
+| (counts.txt)   |      |     table      |      |     table      |
++----------------+      +----------------+      +-------+--------+
                                                         |
-                                                        v
-                                                +----------------+
-                                                | game_statistics|
-                                                |     table      |
-                                                +----------------+
+                                         +------+------+
+                                         |             |
+                                         v             v
+                                 +------------------+  +----------------+
+                                 |  game_snapshots  |  | game_statistics|
+                                 |      table       |  |     table      |
+                                 +------------------+  +----------------+
 ```
 
 ## Table Relationships
 
-```
+```text
 +----------------+         +----------------+         +------------------+
 | files_metadata |----+    |   raw_games    |----+    |  game_snapshots  |
 +----------------+    |    +----------------+    |    +------------------+
@@ -67,14 +71,14 @@ initialize_database()
 
 ### Populate Legal Moves
 
-```bash
+```python
 python -m packages.train.src.dataset.fillers.fill_legal_moves
 ```
 
 ### Process Games into Snapshots
 
 ```python
-from packages.train.src.dataset.processers.game_snapshots import SnapshotBatchProcessor
+from packages.train.src.dataset.processors.game_snapshots import SnapshotBatchProcessor
 from packages.train.src.dataset.repositories.raw_games import fetch_unprocessed_raw_games
 
 processor = SnapshotBatchProcessor(batch_size=1000)
@@ -104,7 +108,7 @@ python -m packages.train.src.dataset.plotter --bins 50 -o elo_dist.png
 
 ## Board Encoding
 
-```
+```text
 Input: FEN string "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 
 Output: 772-dimensional tensor
@@ -128,7 +132,7 @@ Turn: One-hot [white, black]
 Set via environment variables or `.env` file:
 
 | Variable | Default | Description |
-|----------|---------|-------------|
+| ---------- | --------- | ------------- |
 | DB_FILE | database.sqlite3 | SQLite database path |
 | MIN_ELO | 600 | Minimum ELO filter |
 | MAX_ELO | 1900 | Maximum ELO filter |
