@@ -1,6 +1,7 @@
 # Rylee - The Human-like Chessbot
 
-Rylee is a chess application suite with multiple engines, data processing tools, and ML training utilities.
+Rylee is a chess application suite with multiple engines, data processing
+tools, and ML training utilities.
 
 ## Features
 
@@ -36,7 +37,7 @@ poetry run python -m packages.train.src.train.main
 
 ## Project Structure
 
-```
+```text
 rylee/
 ├── packages/
 │   ├── convert/       # PGN conversion utilities
@@ -59,4 +60,3 @@ PGN file combination and conversion to CSV for ML training.
 ### [Train](packages/train/README.md)
 
 ML training pipeline and Lichess dataset ETL.
-

@@ -306,18 +306,18 @@ def plot_training_summary(
 Total Epochs: {len(epoch_df)}
 
 Final Metrics:
-  Train Loss: {epoch_df['train_loss'].iloc[-1]:.4f}
-  Val Loss: {epoch_df['val_loss'].iloc[-1]:.4f}
-  Train Acc: {epoch_df['train_accuracy'].iloc[-1]:.2f}%
-  Val Acc: {epoch_df['val_accuracy'].iloc[-1]:.2f}%
+  Train Loss: {epoch_df["train_loss"].iloc[-1]:.4f}
+  Val Loss: {epoch_df["val_loss"].iloc[-1]:.4f}
+  Train Acc: {epoch_df["train_accuracy"].iloc[-1]:.2f}%
+  Val Acc: {epoch_df["val_accuracy"].iloc[-1]:.2f}%
 
 Best Validation:
-  Epoch: {epoch_df.loc[epoch_df['val_loss'].idxmin(), 'epoch']}
-  Loss: {epoch_df['val_loss'].min():.4f}
-  Acc: {epoch_df.loc[epoch_df['val_accuracy'].idxmax(), 'val_accuracy']:.2f}%
+  Epoch: {epoch_df.loc[epoch_df["val_loss"].idxmin(), "epoch"]}
+  Loss: {epoch_df["val_loss"].min():.4f}
+  Acc: {epoch_df.loc[epoch_df["val_accuracy"].idxmax(), "val_accuracy"]:.2f}%
 
 Overfitting Indicator:
-  Gap: {(epoch_df['val_loss'].iloc[-1] - epoch_df['train_loss'].iloc[-1]):.4f}"""
+  Gap: {(epoch_df["val_loss"].iloc[-1] - epoch_df["train_loss"].iloc[-1]):.4f}"""
     ax3.text(
         0.1,
         0.9,

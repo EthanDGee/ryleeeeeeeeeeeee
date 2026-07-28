@@ -7,7 +7,7 @@ import chess.pgn
 from packages.train.src.constants import DEFAULT_BATCH_SIZE, DEFAULT_PRINT_INTERVAL
 from packages.train.src.dataset.models.game_snapshot import GameSnapshot
 from packages.train.src.dataset.models.raw_game import RawGame
-from packages.train.src.dataset.processers.game_statistics import extract_statistics_from_raw_game
+from packages.train.src.dataset.processors.game_statistics import extract_statistics_from_raw_game
 from packages.train.src.dataset.repositories.game_snapshots import (
     count_snapshots,
     save_snapshots_batch,

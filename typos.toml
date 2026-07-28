@@ -1,0 +1,12 @@
+[files]
+extend-exclude = ["*/UML.md"]
+
+[default]
+extend-ignore-re = ["compeat", "Compeat"]
+
+[default.extend-words]
+OT = "OT"
+Ethe = "Ethe"
+thm = "thm"
+nd = "nd"
+setp = "setp"

@@ -4,7 +4,7 @@ Setup guide for Stockfish and LCZero chess engines.
 
 ## Stockfish
 
-### Installation
+### Stockfish Installation
 
 ```bash
 sudo apt install stockfish  # Linux (Debian/Ubuntu)
@@ -14,7 +14,7 @@ brew install stockfish      # macOS
 
 Verify: Run `stockfish` (type `quit` to exit)
 
-### Configuration
+### Stockfish Configuration
 
 ```python
 from packages.play.src.player.stockfish_bot_player import StockfishPlayer, StockfishPlayerConfig
@@ -31,11 +31,12 @@ player = StockfishPlayer(
 
 ## LCZero
 
-### Installation
+### LCZero Installation
 
 1. **Download binary** from [lczero.org/play/download](https://lczero.org/play/download/)
 
 2. **Install binary**:
+
    ```bash
    # Linux/macOS
    chmod +x lc0
@@ -46,6 +47,7 @@ player = StockfishPlayer(
    ```
 
 3. **Download neural network** from [bestnets](https://lczero.org/play/networks/bestnets/):
+
    ```bash
    mkdir -p ~/.local/share/lc0/networks
    cp latest.pb.gz ~/.local/share/lc0/networks/
@@ -53,7 +55,7 @@ player = StockfishPlayer(
 
 Verify: Run `lc0` (type `quit` to exit)
 
-### Configuration
+### LCZero Configuration
 
 ```python
 from packages.play.src.player.lc0_bot_player import Lc0BotPlayer, Lc0BotPlayerConfig
@@ -70,16 +72,17 @@ player = Lc0BotPlayer(
 ## Troubleshooting
 
 | Issue | Solution |
-|-------|----------|
-| Engine not found | Verify `stockfish` or `lc0` runs in terminal; check PATH |
-| LCZero network missing | Ensure `.pb.gz` file in `~/.local/share/lc0/networks/` |
-| Slow performance | Increase `time_limit` or lower Stockfish `skill_level` |
+| ------- | ---------- |
+| Engine not found | Verify engine runs in terminal; check PATH |
+| LCZero network missing | Ensure `.pb.gz` in `~/.local/share/lc0/networks/` |
+| Slow performance | Increase `time_limit` or lower `skill_level` |
 | Path not updated | Restart terminal after PATH changes |
+| Command timeout | Extend `time_limit` parameter |
 
 ## Engine Comparison
 
 | Feature | Stockfish | LCZero |
-|---------|-----------|---------|
+| --------- | ----------- | --------- |
 | **Style** | Tactical, deep calculation | Positional, strategic |
 | **Strengths** | Tactics, endgames | Positional play, creativity |
 | **Hardware** | CPU-based | CPU/GPU (GPU optional) |

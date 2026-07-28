@@ -35,7 +35,7 @@ class TestFillDatabaseWithSnapshots:
     @patch("packages.train.src.dataset.repositories.files_metadata.files_metadata_exist")
     @patch("packages.train.src.dataset.repositories.files_metadata.save_files_metadata")
     @patch("packages.train.src.dataset.requesters.file_metadata.fetch_files_metadata")
-    @patch("packages.train.src.dataset.processers.game_snapshots.count_snapshots")
+    @patch("packages.train.src.dataset.processors.game_snapshots.count_snapshots")
     def test_fetches_metadata_if_not_exists(
         self,
         mock_count,
@@ -63,14 +63,14 @@ class TestFillDatabaseWithSnapshots:
 
     @patch("packages.train.src.dataset.fillers.fill_snapshots_and_statistics.initialize_database")
     @patch("packages.train.src.dataset.repositories.files_metadata.files_metadata_exist")
-    @patch("packages.train.src.dataset.processers.game_snapshots.count_snapshots")
+    @patch("packages.train.src.dataset.processors.game_snapshots.count_snapshots")
     @patch(
         "packages.train.src.dataset.fillers.fill_snapshots_and_statistics.fetch_unprocessed_raw_games"
     )
     @patch("packages.train.src.dataset.fillers.fill_snapshots_and_statistics.fetch_new_raw_games")
-    @patch("packages.train.src.dataset.processers.game_snapshots.raw_game_to_snapshots")
-    @patch("packages.train.src.dataset.processers.game_snapshots.save_snapshots_batch")
-    @patch("packages.train.src.dataset.processers.game_snapshots.mark_raw_game_as_processed")
+    @patch("packages.train.src.dataset.processors.game_snapshots.raw_game_to_snapshots")
+    @patch("packages.train.src.dataset.processors.game_snapshots.save_snapshots_batch")
+    @patch("packages.train.src.dataset.processors.game_snapshots.mark_raw_game_as_processed")
     def test_processes_unprocessed_games(
         self,
         mock_mark_processed,
@@ -114,7 +114,7 @@ class TestFillDatabaseWithSnapshots:
     # Skipping this test due to complexity in mocking all count_snapshots() calls
     # @patch("packages.train.src.dataset.fillers.fill_snapshots_and_statistics.initialize_database")
     # @patch("packages.train.src.dataset.repositories.files_metadata.files_metadata_exist")
-    # @patch("packages.train.src.dataset.processers.game_snapshots.count_snapshots")
+    # @patch("packages.train.src.dataset.processors.game_snapshots.count_snapshots")
     # @patch("packages.train.src.dataset.fillers.fill_snapshots_and_statistics.fetch_unprocessed_raw_games")
     # @patch("packages.train.src.dataset.fillers.fill_snapshots_and_statistics.fetch_new_raw_games")
     # @patch("packages.train.src.dataset.fillers.fill_snapshots_and_statistics.save_raw_games_batch")
@@ -141,7 +141,7 @@ class TestFillDatabaseWithSnapshots:
 
     @patch("packages.train.src.dataset.fillers.fill_snapshots_and_statistics.initialize_database")
     @patch("packages.train.src.dataset.repositories.files_metadata.files_metadata_exist")
-    @patch("packages.train.src.dataset.processers.game_snapshots.count_snapshots")
+    @patch("packages.train.src.dataset.processors.game_snapshots.count_snapshots")
     @patch(
         "packages.train.src.dataset.fillers.fill_snapshots_and_statistics.fetch_unprocessed_raw_games"
     )
@@ -176,7 +176,7 @@ class TestFillDatabaseWithSnapshots:
                 return_value=True,
             ),
             patch(
-                "packages.train.src.dataset.processers.game_snapshots.count_snapshots",
+                "packages.train.src.dataset.processors.game_snapshots.count_snapshots",
                 return_value=100_000,
             ),
         ):
@@ -185,7 +185,7 @@ class TestFillDatabaseWithSnapshots:
 
     @patch("packages.train.src.dataset.fillers.fill_snapshots_and_statistics.initialize_database")
     @patch("packages.train.src.dataset.repositories.files_metadata.files_metadata_exist")
-    @patch("packages.train.src.dataset.processers.game_snapshots.count_snapshots")
+    @patch("packages.train.src.dataset.processors.game_snapshots.count_snapshots")
     def test_respects_custom_threshold(self, mock_count, mock_files_exist, _mock_init):
         """Test that custom threshold is respected."""
         mock_files_exist.return_value = True
@@ -311,22 +311,22 @@ class TestSnapshotBatchProcessor:
 
     def test_initialization(self):
         """Test processor initializes with correct defaults."""
-        from packages.train.src.dataset.processers.game_snapshots import SnapshotBatchProcessor
+        from packages.train.src.dataset.processors.game_snapshots import SnapshotBatchProcessor
 
         with patch(
-            "packages.train.src.dataset.processers.game_snapshots.count_snapshots",
+            "packages.train.src.dataset.processors.game_snapshots.count_snapshots",
             return_value=0,
         ):
             processor = SnapshotBatchProcessor(batch_size=100, print_interval=50)
             assert processor.batch_size == 100
             assert processor.print_interval == 50
 
-    @patch("packages.train.src.dataset.processers.game_snapshots.count_snapshots")
-    @patch("packages.train.src.dataset.processers.game_snapshots.save_snapshots_batch")
-    @patch("packages.train.src.dataset.processers.game_snapshots.mark_raw_game_as_processed")
+    @patch("packages.train.src.dataset.processors.game_snapshots.count_snapshots")
+    @patch("packages.train.src.dataset.processors.game_snapshots.save_snapshots_batch")
+    @patch("packages.train.src.dataset.processors.game_snapshots.mark_raw_game_as_processed")
     def test_process_games_basic(self, mock_mark, _mock_save_batch, mock_count):
         """Test basic game processing."""
-        from packages.train.src.dataset.processers.game_snapshots import SnapshotBatchProcessor
+        from packages.train.src.dataset.processors.game_snapshots import SnapshotBatchProcessor
 
         mock_count.return_value = 0
 
@@ -345,12 +345,12 @@ class TestSnapshotBatchProcessor:
         assert games_processed == 1
         mock_mark.assert_called_once_with(game)
 
-    @patch("packages.train.src.dataset.processers.game_snapshots.count_snapshots")
-    @patch("packages.train.src.dataset.processers.game_snapshots.save_snapshots_batch")
-    @patch("packages.train.src.dataset.processers.game_snapshots.mark_raw_game_as_processed")
+    @patch("packages.train.src.dataset.processors.game_snapshots.count_snapshots")
+    @patch("packages.train.src.dataset.processors.game_snapshots.save_snapshots_batch")
+    @patch("packages.train.src.dataset.processors.game_snapshots.mark_raw_game_as_processed")
     def test_process_games_with_filter(self, mock_mark, _mock_save_batch, mock_count):
         """Test processing games with filter."""
-        from packages.train.src.dataset.processers.game_snapshots import SnapshotBatchProcessor
+        from packages.train.src.dataset.processors.game_snapshots import SnapshotBatchProcessor
 
         mock_count.return_value = 0
 
@@ -373,12 +373,12 @@ class TestSnapshotBatchProcessor:
         assert games_processed == 1
         assert mock_mark.call_count == 1
 
-    @patch("packages.train.src.dataset.processers.game_snapshots.count_snapshots")
-    @patch("packages.train.src.dataset.processers.game_snapshots.save_snapshots_batch")
-    @patch("packages.train.src.dataset.processers.game_snapshots.mark_raw_game_as_processed")
+    @patch("packages.train.src.dataset.processors.game_snapshots.count_snapshots")
+    @patch("packages.train.src.dataset.processors.game_snapshots.save_snapshots_batch")
+    @patch("packages.train.src.dataset.processors.game_snapshots.mark_raw_game_as_processed")
     def test_process_games_with_stop_condition(self, _mock_mark, _mock_save_batch, mock_count):
         """Test processing stops when should_stop returns True."""
-        from packages.train.src.dataset.processers.game_snapshots import SnapshotBatchProcessor
+        from packages.train.src.dataset.processors.game_snapshots import SnapshotBatchProcessor
 
         mock_count.return_value = 0
 
@@ -407,10 +407,10 @@ class TestSnapshotBatchProcessor:
 
     def test_get_snapshot_count(self):
         """Test getting current snapshot count."""
-        from packages.train.src.dataset.processers.game_snapshots import SnapshotBatchProcessor
+        from packages.train.src.dataset.processors.game_snapshots import SnapshotBatchProcessor
 
         with patch(
-            "packages.train.src.dataset.processers.game_snapshots.count_snapshots",
+            "packages.train.src.dataset.processors.game_snapshots.count_snapshots",
             return_value=42,
         ):
             processor = SnapshotBatchProcessor()

@@ -73,7 +73,7 @@ style: |
 
 # Rylee: Creating a Deployable Human-Like Chess Engine to Enhance the Learning Experience
 
-**Ethan Gee & Nate Stott**
+## Ethan Gee & Nate Stott
 
 ---
 
@@ -91,7 +91,8 @@ style: |
 <div class="columns">
 <div>
 
-**Maia Problems**
+## Maia Problems
+
 - Traditional chess engines maximize the chances of winning
 - Predicting a move a human would play does not mean finding the best move
 - **Goal**: Replicate human play
@@ -99,7 +100,8 @@ style: |
 </div>
 <div>
 
-**Rylee Problems**
+## Rylee Problems
+
 - Maia requires **large GPUs** to run and train
 - Maia can only run on high end machines
 - Maia was not trained to play chess openings
@@ -115,17 +117,21 @@ style: |
 <div class="columns">
 <div>
 
-**Why human aligned AI matters**
-- Traditional engines play chess differently making it difficult for humans to learn from
+## Why human aligned AI matters
+
+- Traditional engines play chess differently making it difficult for humans
+  to learn from
 - Attenuating does not **mimic human play**
 - Human aligned engines creates more realistic **training partners**
-- Example: Chess students can practice with Rylee on their school chromebook to advance their chess skills
+- Example: Chess students can practice with Rylee on their school
+  chromebook to advance their chess skills
 - Broader applications: Collaborative decision-making, Education, etc
 
 </div>
 <div>
 
-**How Rylee extends Maia**
+## How Rylee extends Maia
+
 - **Edge deployment** Raspberry Pi, Chromebooks
 - **Includes openings** first 10 moves
 - **No game filtering** include all game types (classical, blitz, etc)
@@ -138,9 +144,10 @@ style: |
 
 # Methodology - Proposed Solution
 
-> We hypothesizes we can maintain similar performance, and add features to the Maia model while significantly reducing model size.
+> We hypothesizes we can maintain similar performance, and add features
+> to the Maia model while significantly reducing model size.
 
-<img src="./figures/high_level.png" width="1000">
+<img src="./figures/high_level.png" width="1000" alt="High level architecture">
 
 <div class="columns">
 <div>
@@ -151,8 +158,8 @@ style: |
 </div>
 <div>
 
-3. Feed data into NN
-4. Predict moves
+1. Feed data into NN
+2. Predict moves
 
 </div>
 </div>
@@ -164,7 +171,7 @@ style: |
 <div class="columns">
 <div>
 
-<img src="./figures/data_pipeline.png" width="600">
+<img src="./figures/data_pipeline.png" width="600" alt="Data pipeline diagram">
 
 </div>
 <div>
@@ -183,15 +190,18 @@ style: |
 
 # Methodology - Theories
 
+## Why CNNs work well for chess
 
-**Why CNNs work well for chess**
-- Chess boards are **spatially related** (knight is better if its in the middle)
+- Chess boards are **spatially related** (knight is better if its in the
+  middle)
 - Humans evaluate through pattern recognition
 - CNNs excel at **spatial pattern recognition**
 
-**Model size vs performance**
+## Model size vs performance
+
 - Increasing model size has exponentially diminishing returns
-- We are hoping we can decrease the size of the Maia model while still keeping high accuracy
+- We are hoping we can decrease the size of the Maia model while still
+  keeping high accuracy
 
 ---
 
@@ -200,7 +210,7 @@ style: |
 <div class="columns">
 <div>
 
-<img src="./figures/nn_architecture.png" width="600">
+<img src="./figures/nn_architecture.png" width="600" alt="Neural network architecture">
 
 - **Input**: Board(8x8x12) + Metadata(4)
 
@@ -239,13 +249,14 @@ style: |
 </div>
 <div>
 
-| Split      | Percentage | Snapshots      |
-|------------|------------|----------------|
-| Training   | 80%        | **800,000**    |
-| Validation | 10%        | **100,000**    |
-| Test       | 10%        | **100,000**    |
+| Split      | Percentage | Snapshots     |
+| ---------- | ---------- | ------------- |
+| Training   | 80%        | **800,000**   |
+| Validation | 10%        | **100,000**   |
+| Test       | 10%        | **100,000**   |
 
-<img src="./figures/elo-distribution.png" width="600">
+<img src="./figures/elo-distribution.png" width="600"
+  alt="ELO distribution chart">
 
 </div>
 </div>
@@ -254,34 +265,39 @@ style: |
 
 # Experiments - Baselines
 
-| Baseline Model            | Description                      |
-|-------------------|----------------------------------|
-| **Random**        | Random legal move selection      |
-| **Random Forest** | Nothing that simple should work that well - Ethan Gee |
-| **Stockfish 15**  | Traditional chess engine         |
-| **Leela 4200**    | Neural chess engine              |
-| **Maia-1 1500**    | Human aligned prediction model   |
+| Baseline Model      | Description                |
+| ------------------- | -------------------------- |
+| **Random**          | Random legal move select   |
+| **Random Forest**   | Simple baseline model      |
+| **Stockfish 15**    | Traditional chess engine   |
+| **Leela 4200**      | Neural chess engine        |
+| **Maia-1 1500**     | Human aligned model        |
 
 ---
 
 # Experiments - Architecture
 
-**Small Fully Connected Model**
+## Small Fully Connected Model
+
 - A Small model that had a similar architecture to StockFish
 - 8 fully connected layers of 32 neurons
 
-**Convolutional Model**
+## Convolutional Model
+
 - Combination of Convolution and fully connected to mirror human cognition
 
-**Convolution with Auxillary Head**
-- Added an auxillary head that determines legal moves to instill better game understanding
+## Convolution with Auxiliary Head
+
+- Added an auxiliary head that determines legal moves to instill better
+  game understanding
 
 ---
 
 # Experiments - Evaluation Metrics
 
 - **Top-1 Accuracy**: Predicted move matches actual human move
-- **Top-5 Accuracy**: Actual move in top 5 predictions. This is a good for a more generalized alignment.
+- **Top-5 Accuracy**: Actual move in top 5 predictions. Good for more
+  generalized alignment.
 
 ---
 
@@ -290,27 +306,29 @@ style: |
 <div class="columns">
 <div>
 
-
-| Method                  | Top-1 Accuracy |
-|-------------------------|----------------|
-| **Random**              | **6%**         |
-| **Random Forest**       | **13%**        |
-| **Stockfish 15**        | **40%**        |
-| **Leela 4200**          | **44%**        |
-| **Maia1 1500**          | **51%**        |
-| **Rylee FC**            | **3.5%**       |
-| **Rylee Conv**          | **23.5%**      |
-| **Rylee Conv with Aux** | **25%**        |
-| **Rylee Conv with Aux Filtered** | **35%**        |
+| Method              | Top-1 Accuracy |
+| ------------------- | -------------- |
+| **Random**          | **6%**         |
+| **Random Forest**   | **13%**        |
+| **Stockfish 15**    | **40%**        |
+| **Leela 4200**      | **44%**        |
+| **Maia1 1500**      | **51%**        |
+| **Rylee FC**        | **3.5%**       |
+| **Rylee Conv**      | **23.5%**      |
+| **Rylee Conv+Aux**  | **25%**        |
+| **Rylee Conv+AuxF** | **35%**        |
 
 </div>
 <div>
 
-- Rylee has 800,000 parameters vs Maia's 25 Million
-- No filtering by game type (classical, blitz, etc) to capture broader human play patterns
-- We include games with mixed skill levels to better reflect general human behavior
+- Rylee has 800,000 parameters vs Maia’s 25 Million
+- No filtering by game type (classical, blitz, etc) to capture broader
+  human play patterns
+- We include games with mixed skill levels to better reflect general human
+  behavior
 - 15,000 games vs. Maia’s 169 million games
-- Maia was Trained on two A100 80Gb GPUs vs Rylee being trained on a Edge Device
+- Maia was Trained on two A100 80Gb GPUs vs Rylee being trained on a
+  Edge Device
 
 </div>
 </div>
@@ -319,9 +337,10 @@ style: |
 
 # Experiments - Deployment
 
-<img src="./figures/chess.gif" width="900">
+<img src="./figures/chess.gif" width="900" alt="Chess game in progress">
 
-We have a tkinter gui. Here is it running on a crappy laptop. Black is Rylee and White is Stockfish.
+We have a tkinter gui. Here is it running on a crappy laptop. Black is
+Rylee and White is Stockfish.
 
 ---
 
@@ -330,15 +349,16 @@ We have a tkinter gui. Here is it running on a crappy laptop. Black is Rylee and
 <div class="columns">
 <div>
 
-| Metric          | Training | Validation |
-|-----------------|----------|------------|
-| **Loss**        | 0.0152   | 0.0164     |
-| **Top-1 Accuracy** | 27%    | 25%      |
-| **Top-5 Accuracy** | 53%    | 51%      |
-| **Top-1 Accuracy Filtered** | 36%    | 35%      |
-| **Top-5 Accuracy Filtered** | 54%    | 53%      |
+| Metric                | Training | Validation |
+| --------------------- | -------- | ---------- |
+| **Loss**              | 0.0152   | 0.0164     |
+| **Top-1 Accuracy**    | 27%      | 25%        |
+| **Top-5 Accuracy**    | 53%      | 51%        |
+| **Top-1 Accuracy F**  | 36%      | 35%        |
+| **Top-5 Accuracy F**  | 54%      | 53%        |
 
-- Strong generalization between training and validation metrics. Model captures key human decision-making patterns.
+- Strong generalization between training and validation metrics. Model
+  captures key human decision-making patterns.
 - Rylee required around 1.5 hours of preprocessing and 2-3 days of training
 
 </div>
@@ -346,7 +366,7 @@ We have a tkinter gui. Here is it running on a crappy laptop. Black is Rylee and
 
 - Maia required 8 days of preprocessing and 3-4 weeks of training
 
-<img src="./figures/epoch_curves.png" width="400">
+<img src="./figures/epoch_curves.png" width="400" alt="Training curves">
 
 </div>
 </div>
@@ -355,14 +375,17 @@ We have a tkinter gui. Here is it running on a crappy laptop. Black is Rylee and
 
 # Conclusions - Future Work
 
-**Model Improvements**
+## Model Improvements
+
 - Add data augmentation (board flips and rotations) to improve robustness
 - Time parameter to better address time based decision making
 - Cross Validation
   - Maia was not able to do this because of the size of the dataset
 
-**Additional Features**
-- **ELO Prediction:** Estimate player rating from move patterns to quickly adapt to player skill
+## Additional Features
+
+- **ELO Prediction:** Estimate player rating from move patterns to quickly
+  adapt to player skill
 - **Human vs Bot Discriminator:** Detect engine-like play
 - **Blunder Detection:** Identify major mistakes for analysis
 
@@ -370,11 +393,17 @@ We have a tkinter gui. Here is it running on a crappy laptop. Black is Rylee and
 
 # Conclusions - Summary
 
-- **Rylee mimics human chess behavior** using a model that is 30x smaller than Maia
-- **Achieves competitive accuracy** (25-35% Top-1, 51-54% Top-5) despite using significantly less data, compute, and expanding capabilities, and data variety
-- **Efficient data pipeline and compact architecture** make Rylee deployable edge devices such as Chromebooks and Raspberry Pis
-- **Generalizes well** across training and validation datasets, indicating a healthy fitting of human chess playing patterns
-- **Demonstrates the feasibility** of edge-deployable, human-aligned AI for education applications
+- **Rylee mimics human chess behavior** using a model that is 30x smaller
+  than Maia
+- **Achieves competitive accuracy** (25-35% Top-1, 51-54% Top-5) despite
+  using significantly less data, compute, and expanding capabilities, and
+  data variety
+- **Efficient data pipeline and compact architecture** make Rylee
+  deployable edge devices such as Chromebooks and Raspberry Pis
+- **Generalizes well** across training and validation datasets, indicating
+  a healthy fitting of human chess playing patterns
+- **Demonstrates the feasibility** of edge-deployable, human-aligned AI
+  for education applications
 
 ---
 
@@ -383,23 +412,28 @@ We have a tkinter gui. Here is it running on a crappy laptop. Black is Rylee and
 <div class="columns">
 <div>
 
-**Primary Works**
-- McIlroy-Young et al. (2020). "Aligning Superhuman AI with Human Behavior: Chess as a Model System." KDD 2020.
-- Tang et al. (2024). "Maia-2: A Unified Model for Human-AI Alignment in Chess." NeurIPS 2024.
-- McIlroy-Young et al. (2021). "Detecting Individual Decision-Making Style: Exploring Behavioral Stylometry in Chess." NeurIPS 2021.
+## Primary Works
 
-**Rylee Repo:** https://github.com/EthanDGee/ryleeeeeeeeeeeee
+- McIlroy-Young et al. (2020). "Aligning Superhuman AI with Human
+  Behavior: Chess as a Model System." KDD 2020.
+- Tang et al. (2024). "Maia-2: A Unified Model for Human-AI Alignment in
+  Chess." NeurIPS 2024.
+- McIlroy-Young et al. (2021). "Detecting Individual Decision-Making
+  Style: Exploring Behavioral Stylometry in Chess." NeurIPS 2021.
+
+**Rylee Repo:** <https://github.com/EthanDGee/ryleeeeeeeeeeeee>
 
 </div>
 <div>
 
-**Data & Tools**
-- Lichess Open Database: https://database.lichess.org/
-- Stockfish Chess Engine: https://stockfishchess.org/
-- Leela Chess Zero: https://lczero.org/
-- Maia Chess Project: https://maiachess.com/
-- PyTorch (Paszke et al., 2019): https://pytorch.org/
-- python-chess library (Moskopp, 2014): https://github.com/niklasf/python-chess
+## Data & Tools
+
+- Lichess Open Database: <https://database.lichess.org/>
+- Stockfish Chess Engine: <https://stockfishchess.org/>
+- Leela Chess Zero: <https://lczero.org/>
+- Maia Chess Project: <https://maiachess.com/>
+- PyTorch (Paszke et al., 2019): <https://pytorch.org/>
+- python-chess library (Moskopp, 2014): <https://github.com/niklasf/python-chess>
 
 </div>
 </div>
@@ -408,14 +442,20 @@ We have a tkinter gui. Here is it running on a crappy laptop. Black is Rylee and
 
 # Terminology
 
-- **ELO Rating** - Numeric chess player skill score used to represent player strength (500 beginner, 1500 intermediate, 2500 expert)
-- **Board Snapshot** - A single chess board state (imagine taking a picture of the board every time a player makes a move, each of those pictures should be a board snapshot)
-- **Action Space (2104 moves)** - Fixed index set representing all possible legal chess moves
-- **Auxiliary Head** - Secondary output predicting legal moves to guide the main move head. Meant to strengthen legal move connections/predictions.
+- **ELO Rating** - Numeric chess player skill score used to represent
+  player strength (500 beginner, 1500 intermediate, 2500 expert)
+- **Board Snapshot** - A single chess board state (imagine taking a
+  picture of the board every time a player makes a move, each of those
+  pictures should be a board snapshot)
+- **Action Space (2104 moves)** - Fixed index set representing all
+  possible legal chess moves
+- **Auxiliary Head** - Secondary output predicting legal moves to guide
+  the main move head. Meant to strengthen legal move connections.
 - **Opening Phase** - The first 10ish moves of the game
 - **Blunder** - An objectively terrible chess move
 - **Lichess Dataset** - Large open database of real human chess games
-- **Human-Aligned Model** - Predicts human-like moves rather than optimal engine moves
+- **Human-Aligned Model** - Predicts human-like moves rather than optimal
+  engine moves
 
 ---
 
@@ -423,6 +463,7 @@ We have a tkinter gui. Here is it running on a crappy laptop. Black is Rylee and
 
 # Questions?
 
-**Rylee**: Creating a Deployable Human-Like Chess Engine to Enhance the Learning Experience
+**Rylee**: Creating a Deployable Human-Like Chess Engine to Enhance
+the Learning Experience
 
 Ethan Gee & Nate Stott

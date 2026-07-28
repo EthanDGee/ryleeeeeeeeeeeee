@@ -4,7 +4,7 @@ import pytest
 
 from packages.train.src.dataset.models.game_statistics import GameStatistics
 from packages.train.src.dataset.models.raw_game import RawGame
-from packages.train.src.dataset.processers.game_statistics import extract_statistics_from_raw_game
+from packages.train.src.dataset.processors.game_statistics import extract_statistics_from_raw_game
 from packages.train.src.dataset.repositories.game_statistics import (
     count_game_statistics,
     create_game_statistics_table,

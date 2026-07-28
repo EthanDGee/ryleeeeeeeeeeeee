@@ -4,7 +4,8 @@
 
 Feedforward network for chess move prediction.
 
-**Architecture:** `Input(772) -> Linear(512) -> Linear(32)x5 -> Linear(2104) -> Softmax`
+**Architecture:** `Input(772) -> Linear(512) -> Linear(32)x5 -> Linear(2104)
+-> Softmax`
 
 ### Input (772 dims)
 
@@ -16,7 +17,8 @@ Feedforward network for chess move prediction.
 
 ### Output (2104 dims)
 
-Probability distribution over all valid chess moves. Use `LegalMovesDataset` to convert indices <-> UCI strings.
+Probability distribution over all valid chess moves. Use
+`LegalMovesDataset` to convert indices <-> UCI strings.
 
 ### Usage
 
