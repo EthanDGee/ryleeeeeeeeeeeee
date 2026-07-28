@@ -46,16 +46,25 @@ class TestGameSnapshotsDataset:
         assert pytest.approx(result[0].item(), 0.001) == (2000 - 1638.43153) / 185.80054702756055
         assert pytest.approx(result[1].item(), 0.001) == (1500 - 1638.43153) / 185.80054702756055
 
-    def test_encode_move_valid(self):
+    @patch("packages.train.src.dataset.processors.processed_snapshots.LegalMovesDataset")
+    def test_encode_move_valid(self, mock_legal_moves_dataset):
         """Test encoding of valid chess move."""
+        mock_instance = mock_legal_moves_dataset.return_value
+        mock_instance.get_index_from_move.return_value = 42  # Mock move index
+
         processor = ProcessedSnapshotsProcessor()
         fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
         move_san = "e4"
         move = processor._encode_move(fen, move_san)
         assert isinstance(move, int)
+        assert move == 42
 
-    def test_encode_move_invalid(self):
+    @patch("packages.train.src.dataset.processors.processed_snapshots.LegalMovesDataset")
+    def test_encode_move_invalid(self, mock_legal_moves_dataset):
         """Test encoding of invalid chess move."""
+        mock_instance = mock_legal_moves_dataset.return_value
+        mock_instance.get_index_from_move.return_value = -1  # Mock invalid move
+
         processor = ProcessedSnapshotsProcessor()
         fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
         move_san = "invalid_move"
