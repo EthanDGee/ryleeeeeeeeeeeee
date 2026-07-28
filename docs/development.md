@@ -8,7 +8,7 @@ Detailed setup and workflow for contributors.
 python -m venv .venv
 source .venv/bin/activate  # Windows: .venv\Scripts\activate
 pip install -e .
-pre-commit install
+prek install
 pytest packages/*/tests/ -v  # Verify setup
 ```
 
@@ -26,24 +26,99 @@ human-chessbot/
 
 ## Workflow
 
+### Local Development
+
 ```bash
 git checkout -b feature/my-feature  # Create branch
 # Make changes
 git add .
-git commit -m "Add feature X"       # Pre-commit hooks run automatically
+git commit -m "feat: add feature X"  # Prek hooks run automatically
 # If hooks fail, review changes and recommit
+git push origin feature/my-feature
 ```
+
+**Commit Message Format:**
+
+This project uses conventional commits. Prefix your message with:
+
+- `feat:` - New feature
+- `fix:` - Bug fix
+- `docs:` - Documentation
+- `style:` - Formatting (no code change)
+- `refactor:` - Code refactoring
+- `test:` - Tests
+- `chore:` - Build, dependencies, etc.
+
+Example: `feat(play): add move validation`
+
+### Continuous Integration
+
+All commits are checked by GitHub Actions:
+
+- Code linting and formatting
+- Type checking with MyPy
+- Unit tests with coverage
+- Security scanning
+- Markdown validation
+
+See `.github/workflows/` for configuration and
+`.github/workflows/README.md` for details.
 
 ## Tools
 
-### Pre-commit Hooks
+### Prek - Pre-commit Framework
 
-Auto-run on commit. Manual usage:
+This project uses **prek**, a Rust-based pre-commit framework that's faster
+than the standard pre-commit tool.
+
+**Configuration:** `prek.toml`
+
+**Installation:**
+
+Prek is automatically installed when you run `pip install -e .`. To set up
+Git hooks:
 
 ```bash
-pre-commit run --all-files              # All hooks
-pre-commit run --files path/to/file.py  # Specific files
-pre-commit autoupdate                   # Update versions
+prek install
+```
+
+**Hooks Configured:**
+
+- **Trailing whitespace** - Remove trailing spaces
+- **YAML/JSON/TOML validation** - Check syntax
+- **Large file detection** - Prevent committing large files
+- **Merge conflict detection** - Catch unresolved conflicts
+- **Debug statements** - Remove debug code before commit
+- **Conventional commits** - Enforce commit format
+- **Spell checking** - Detect typos in code and messages
+- **Markdown linting** - Validate markdown syntax
+- **Code formatting** - Prettier for SQL/TOML/YAML
+- **Ruff linting** - Python linting with auto-fix
+- **Type checking** - MyPy for type safety
+
+**Manual Usage:**
+
+```bash
+prek run --all-files              # Run all hooks
+prek run --files path/to/file.py  # Specific files
+prek list-hooks                   # Show configured hooks
+prek autoupdate                   # Update hook versions
+prek uninstall                    # Remove Git hooks
+```
+
+**Stages:**
+
+Hooks run at different Git stages:
+
+- `pre-commit` - Before committing (default)
+- `commit-msg` - Validate commit message
+- `pre-push` - Before pushing to remote
+
+Bypass hooks (not recommended):
+
+```bash
+git commit --no-verify            # Skip pre-commit hooks
+git push --no-verify              # Skip pre-push hooks
 ```
 
 ### Testing
@@ -60,20 +135,27 @@ pytest tests/path/test.py::test_function     # Specific test
 
 ### Linting & Formatting
 
+All tools run automatically via prek hooks, but can be run manually:
+
 ```bash
-ruff check packages/        # Lint
-ruff check --fix packages/  # Auto-fix
-black packages/             # Format
-isort packages/             # Sort imports
-mypy packages/              # Type check
+ruff check packages/        # Check for linting issues
+ruff check --fix packages/  # Auto-fix issues
+ruff format packages/       # Format code
+mypy packages/              # Type checking
 ```
+
+**Note:** These are included in prek hooks, so commits will fail if
+violations exist. Use `--no-verify` only as a last resort.
 
 ## Code Style
 
-- **Line length**: 100 characters
+- **Line length**: 80 characters (markdown), 100 characters (Python)
 - **Python**: 3.11+
 - **Type hints**: Required for functions
 - **Docstrings**: Required for public APIs
+- **Formatting**: Ruff (replaces Black and isort)
+- **Linting**: Ruff
+- **Type checking**: MyPy
 
 ### Import Order
 
@@ -136,13 +218,51 @@ touch packages/mypackage/README.md
 | ------- | ---------- |
 | Import errors | `pip install -e .` |
 | Test failures | `rm -rf .pytest_cache && pip install -e .` |
-| Formatting conflicts | `pre-commit run --all-files` |
-| Type errors | `mypy packages/` to identify issues |
+| Hooks not running | `prek install` to reinstall |
+| Formatting conflicts | `prek run --all-files` |
+| Type errors | `mypy packages/` to identify |
+| Commit message fails | Use conventional format |
+| Hook version mismatch | `prek autoupdate` to update |
+| GitHub Actions fail | Check Actions tab logs |
+
+### Common Prek Issues
+
+**Hooks not installed:**
+
+```bash
+prek install
+```
+
+**Specific hook failing:**
+
+```bash
+prek run --hook-id <hook-name>  # Run single hook
+prek list-hooks                 # See hook names
+```
+
+**Force commit despite failures:**
+
+```bash
+git commit --no-verify  # Not recommended!
+```
+
+### Testing Locally
+
+Before pushing, run all checks locally:
+
+```bash
+prek run --all-files              # All pre-commit hooks
+pytest packages/*/tests/ -v       # Tests
+ruff check packages/              # Linting
+mypy packages/                    # Type checking
+```
 
 ## Resources
 
-- [Black](https://black.readthedocs.io/) - Code formatter
-- [Ruff](https://docs.astral.sh/ruff/) - Linter
-- [mypy](http://mypy-lang.org/) - Type checker
-- [pytest](https://docs.pytest.org/) - Testing framework
-- [Pre-commit](https://pre-commit.com/) - Git hooks
+- [Prek](https://prek.dev/) - Fast pre-commit framework
+- [Ruff](https://docs.astral.sh/ruff/) - Python linter & formatter
+- [MyPy](http://mypy-lang.org/) - Static type checker
+- [Pytest](https://docs.pytest.org/) - Testing framework
+- [Conventional Commits](https://www.conventionalcommits.org/) - Commit format
+- [GitHub Actions](https://github.com/features/actions) - CI/CD
+- [Python Chess](https://python-chess.readthedocs.io/) - Chess library
