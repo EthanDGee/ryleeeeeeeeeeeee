@@ -1,25 +1,29 @@
 package download
 
 import (
+	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"strconv"
 	"strings"
+
+	"server/rest/internal/config"
+	"server/rest/internal/models"
 )
 
-func FetchFilesMetadata() []FileMetadata {
+func FetchFilesMetadata() []models.Metadata {
 	gameCounts := GameCounts()
 
 	if gameCounts == nil {
 		return nil
 	}
 
-	var metadata []FileMetadata
+	var metadata []models.Metadata
 
 	id := 0
 	for filename, count := range gameCounts {
-		fileUrl := LICHESS_BASE_URL + filename
+		fileUrl := config.LICHESS_BASE_URL + filename
 		resp, err := http.Head(fileUrl)
 		if err != nil {
 			log.Fatal(err)
@@ -27,11 +31,12 @@ func FetchFilesMetadata() []FileMetadata {
 		}
 		resp.Body.Close()
 
-		metadata = append(metadata, FileMetadata{
-			url:      fileUrl,
-			filename: filename,
-			games:    count,
-			id:       id,
+		fmt.Println(id)
+		metadata = append(metadata, models.Metadata{
+			Url:      fileUrl,
+			Filename: filename,
+			Games:    count,
+			Id:       id,
 		})
 		id++
 	}
@@ -40,7 +45,7 @@ func FetchFilesMetadata() []FileMetadata {
 }
 
 func GameCounts() map[string]int {
-	response, err := http.Get(GAME_COUNTS_URL)
+	response, err := http.Get(config.GAME_COUNTS_URL)
 	if err != nil {
 		log.Fatal(err)
 		return nil
