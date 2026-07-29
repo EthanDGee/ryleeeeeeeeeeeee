@@ -106,7 +106,9 @@ rev = "v0.5.1"
 id = "go-fmt"
 
 [[repos.hooks]]
-id = "go-vet"
-
-[[repos.hooks]]
 id = "golangci-lint"
+files = "^server/"
+language = "system"
+entry = "cd server && golangci-lint run ./..."
+shell = "bash"
+pass_filenames = false
