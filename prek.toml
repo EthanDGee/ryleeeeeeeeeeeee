@@ -97,3 +97,16 @@ rev = "v2.3.0"
 id = "mypy"
 args = ["--ignore-missing-imports"]
 additional_dependencies = ["types-requests"]
+
+[[repos]]
+repo = "https://github.com/dnephin/pre-commit-golang"
+rev = "v0.5.1"
+
+[[repos.hooks]]
+id = "go-fmt"
+
+[[repos.hooks]]
+id = "go-vet"
+
+[[repos.hooks]]
+id = "golangci-lint"
