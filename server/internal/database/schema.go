@@ -2,12 +2,17 @@ package database
 
 import (
 	"database/sql"
+	"os"
 
 	"server/rest/internal/config"
 	"server/rest/internal/utils"
 )
 
 func InitializeDatabase() error {
+	if err := os.MkdirAll(config.CACHE_FOLDER, 0o755); err != nil {
+		return err
+	}
+
 	db, err := sql.Open("turso", config.LOCAL_DATABASE_PATH)
 	if err != nil {
 		return err
