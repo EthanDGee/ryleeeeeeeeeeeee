@@ -1,25 +1,18 @@
 package download
 
 import (
-	"fmt"
 	"io"
 	"log"
 	"net/http"
+	"server/rest/internal/config"
+	"server/rest/internal/database"
+	"server/rest/internal/models"
 	"strconv"
 	"strings"
-
-	"server/rest/internal/config"
-	"server/rest/internal/models"
 )
 
-func FetchFilesMetadata() []models.Metadata {
+func FetchFilesMetadata() {
 	gameCounts := GameCounts()
-
-	if gameCounts == nil {
-		return nil
-	}
-
-	var metadata []models.Metadata
 
 	id := 0
 	for filename, count := range gameCounts {
@@ -27,21 +20,19 @@ func FetchFilesMetadata() []models.Metadata {
 		resp, err := http.Head(fileUrl)
 		if err != nil {
 			log.Fatal(err)
-			return nil
 		}
 		resp.Body.Close()
 
-		fmt.Println(id)
-		metadata = append(metadata, models.Metadata{
+		metadata := models.Metadata{
 			Url:      fileUrl,
 			Filename: filename,
 			Games:    count,
 			Id:       id,
-		})
+		}
+		database.UpsertMetadata(metadata)
+
 		id++
 	}
-
-	return metadata
 }
 
 func GameCounts() map[string]int {

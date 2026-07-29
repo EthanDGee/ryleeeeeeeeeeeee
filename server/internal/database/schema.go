@@ -6,7 +6,7 @@ import (
 	"server/rest/internal/config"
 )
 
-func initializeDatabase() error {
+func InitializeDatabase() error {
 	db, err := sql.Open("turso", config.LOCAL_DATABASE_PATH)
 	if err != nil {
 		return err

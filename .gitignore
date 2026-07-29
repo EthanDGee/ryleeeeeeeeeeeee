@@ -120,3 +120,4 @@ charts/
 analysis/
 message.txt
 message.csv
+/server/app.db
