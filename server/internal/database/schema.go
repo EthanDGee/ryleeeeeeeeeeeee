@@ -4,6 +4,7 @@ import (
 	"database/sql"
 
 	"server/rest/internal/config"
+	"server/rest/internal/utils"
 )
 
 func InitializeDatabase() error {
@@ -11,7 +12,7 @@ func InitializeDatabase() error {
 	if err != nil {
 		return err
 	}
-	defer db.Close()
+	defer utils.Close(db, "database")
 
 	_, err = db.Exec(
 		`

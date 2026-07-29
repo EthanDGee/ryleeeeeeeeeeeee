@@ -7,6 +7,7 @@ import (
 	"server/rest/internal/config"
 	"server/rest/internal/database"
 	"server/rest/internal/models"
+	"server/rest/internal/utils"
 	"strconv"
 	"strings"
 )
@@ -21,7 +22,7 @@ func FetchFilesMetadata() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		resp.Body.Close()
+		utils.Close(resp.Body, "response body")
 
 		metadata := models.Metadata{
 			Url:      fileUrl,
@@ -29,7 +30,9 @@ func FetchFilesMetadata() {
 			Games:    count,
 			Id:       id,
 		}
-		database.UpsertMetadata(metadata)
+		if err := database.UpsertMetadata(metadata); err != nil {
+			log.Printf("failed to upsert metadata for %s: %v", filename, err)
+		}
 
 		id++
 	}
@@ -42,7 +45,7 @@ func GameCounts() map[string]int {
 		return nil
 	}
 
-	defer response.Body.Close()
+	defer utils.Close(response.Body, "response body")
 
 	body, err := io.ReadAll(response.Body)
 	if err != nil {

@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"server/rest/internal/config"
 	"server/rest/internal/models"
+	"server/rest/internal/utils"
 )
 
 func UpsertMetadata(metadata models.Metadata) error {
@@ -11,7 +12,7 @@ func UpsertMetadata(metadata models.Metadata) error {
 	if err != nil {
 		return err
 	}
-	defer db.Close()
+	defer utils.Close(db, "database")
 
 	var existingID int
 	err = db.QueryRow(`SELECT id FROM metadata WHERE filename = ?`, metadata.Filename).Scan(&existingID)
@@ -39,13 +40,13 @@ func GetAllMetadata() ([]models.Metadata, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer db.Close()
+	defer utils.Close(db, "database")
 
 	rows, err := db.Query(`SELECT id, url, filename, games, processed FROM metadata`)
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer utils.Close(rows, "rows")
 
 	var results []models.Metadata
 	for rows.Next() {
