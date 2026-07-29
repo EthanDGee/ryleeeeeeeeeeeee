@@ -6,10 +6,14 @@ import (
 	"server/rest/internal/config"
 )
 
-func initializeDatabase() {
-	db, _ := sql.Open("turso", config.LOCAL_DATABASE_PATH)
+func initializeDatabase() error {
+	db, err := sql.Open("turso", config.LOCAL_DATABASE_PATH)
+	if err != nil {
+		return err
+	}
+	defer db.Close()
 
-	db.Exec(
+	_, err = db.Exec(
 		`
       CREATE TABLE IF NOT EXISTS metadata (
               id        INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -19,4 +23,5 @@ func initializeDatabase() {
               processed BOOLEAN NOT NULL DEFAULT FALSE
       )`,
 	)
+	return err
 }
