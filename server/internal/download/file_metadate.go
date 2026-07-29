@@ -9,12 +9,37 @@ import (
 )
 
 func FetchFilesMetadata() []FileMetadata {
-	// gameCounts := GameCounts()
+	gameCounts := GameCounts()
 
-	return nil
+	if gameCounts == nil {
+		return nil
+	}
+
+	var metadata []FileMetadata
+
+	id := 0
+	for filename, count := range gameCounts {
+		fileUrl := LICHESS_BASE_URL + filename
+		resp, err := http.Head(fileUrl)
+		if err != nil {
+			log.Fatal(err)
+			return nil
+		}
+		resp.Body.Close()
+
+		metadata = append(metadata, FileMetadata{
+			url:      fileUrl,
+			filename: filename,
+			games:    count,
+			id:       id,
+		})
+		id++
+	}
+
+	return metadata
 }
 
-func GameCounts() map[string]uint {
+func GameCounts() map[string]int {
 	response, err := http.Get(GAME_COUNTS_URL)
 	if err != nil {
 		log.Fatal(err)
@@ -29,7 +54,7 @@ func GameCounts() map[string]uint {
 		return nil
 	}
 
-	gameCounts := make(map[string]uint)
+	gameCounts := make(map[string]int)
 
 	for _, line := range strings.Split(string(body), "\n") {
 		split := strings.Split(line, " ")
@@ -43,7 +68,7 @@ func GameCounts() map[string]uint {
 			return nil
 		}
 
-		gameCounts[split[0]] = uint(numGames)
+		gameCounts[split[0]] = numGames
 	}
 	return gameCounts
 }
