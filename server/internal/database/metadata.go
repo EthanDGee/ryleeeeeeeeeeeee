@@ -76,3 +76,17 @@ func GetSmallestUndownloadedFile() (models.Metadata, error) {
 
 	return metadata, nil
 }
+
+func MarkDownloaded(id int) (bool, error) {
+	db, err := sql.Open("turso", config.LOCAL_DATABASE_PATH)
+	if err != nil {
+		return false, err
+	}
+	defer utils.Close(db, "database")
+
+	_, err = db.Exec(`UPDATE metadata SET downloaded = true WHERE id = ?`, id)
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}
