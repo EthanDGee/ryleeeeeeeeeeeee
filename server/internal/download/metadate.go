@@ -10,6 +10,7 @@ import (
 	"server/rest/internal/utils"
 	"strconv"
 	"strings"
+	"time"
 )
 
 func FetchFilesMetadata() {
@@ -28,12 +29,15 @@ func FetchFilesMetadata() {
 			continue
 		}
 
+		log.Printf("fetching metadata for %s", filename)
+
 		fileUrl := config.LICHESS_BASE_URL + filename
 		resp, err := http.Head(fileUrl)
 		if err != nil {
 			log.Fatal(err)
 		}
 		utils.Close(resp.Body, "response body")
+		time.Sleep(200 * time.Millisecond)
 
 		metadata := models.Metadata{
 			Url:      fileUrl,
