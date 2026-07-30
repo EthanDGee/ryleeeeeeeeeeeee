@@ -107,6 +107,16 @@ id = "go-fmt"
 
 [[repos.hooks]]
 id = "go-vet"
+files = "^server/"
+language = "system"
+entry = "cd server && go vet ./..."
+shell = "bash"
+pass_filenames = false
 
 [[repos.hooks]]
 id = "golangci-lint"
+files = "^server/"
+language = "system"
+entry = "cd server && golangci-lint run ./..."
+shell = "bash"
+pass_filenames = false
