@@ -2,6 +2,7 @@ package database
 
 import (
 	"database/sql"
+
 	"server/rest/internal/config"
 	"server/rest/internal/models"
 	"server/rest/internal/utils"
@@ -57,4 +58,21 @@ func GetAllMetadata() ([]models.Metadata, error) {
 		results = append(results, metadata)
 	}
 	return results, rows.Err()
+}
+
+func GetSmallestUndownloadedFile() (models.Metadata, error) {
+	db, err := sql.Open("turso", config.LOCAL_DATABASE_PATH)
+	if err != nil {
+		return models.Metadata{}, err
+	}
+	defer utils.Close(db, "database")
+
+	row := db.QueryRow(`SELECT id, url, filename, games, processed, downloaded FROM metadata WHERE downloaded = false ORDER BY games ASC LIMIT 1`)
+
+	var metadata models.Metadata
+	if err := row.Scan(&metadata.Id, &metadata.Url, &metadata.Filename, &metadata.Games, &metadata.Processed, &metadata.Downloaded); err != nil {
+		return models.Metadata{}, err
+	}
+
+	return metadata, nil
 }
