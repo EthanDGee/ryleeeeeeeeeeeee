@@ -19,6 +19,8 @@ func FetchGameFile(metadata models.Metadata) {
 		log.Fatal(err)
 	}
 
+	log.Printf("downloading %s", metadata.Filename)
+
 	resp, err := http.Get(metadata.Url)
 	if err != nil {
 		log.Fatal(err)
@@ -48,6 +50,8 @@ func FetchGameFile(metadata models.Metadata) {
 	} else if !success {
 		log.Fatalf("Failed to mark %s as downloaded", metadata.Filename)
 	}
+
+	log.Printf("downloaded %s", metadata.Filename)
 }
 
 func EnsureNGamesDownloaded(n int) {
@@ -68,5 +72,8 @@ func EnsureNGamesDownloaded(n int) {
 			log.Fatal(err)
 		}
 
+		log.Printf("downloaded games: %d/%d (%.1f%%)", downloadedCount, n, float64(downloadedCount)/float64(n)*100)
 	}
+
+	log.Println("finished ensuring games downloaded")
 }

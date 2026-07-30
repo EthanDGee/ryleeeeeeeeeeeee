@@ -2,7 +2,9 @@ package database
 
 import (
 	"database/sql"
+	"log"
 	"os"
+
 	"server/rest/internal/config"
 	"server/rest/internal/utils"
 )
@@ -60,5 +62,10 @@ func InitializeDatabase() error {
 
 		FOREIGN KEY(fileId) REFERENCES metadata(id)
 		)`)
-	return err
+	if err != nil {
+		return err
+	}
+
+	log.Println("database initialized")
+	return nil
 }

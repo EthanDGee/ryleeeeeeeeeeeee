@@ -2,7 +2,6 @@ package database
 
 import (
 	"database/sql"
-	"fmt"
 
 	"server/rest/internal/config"
 	"server/rest/internal/models"
@@ -122,8 +121,6 @@ func CountDownloaded() (int, error) {
 	if err := db.QueryRow(`SELECT SUM(games) FROM metadata WHERE downloaded = true`).Scan(&count); err != nil {
 		return 0, err
 	}
-
-	fmt.Printf("Downloaded Games: %d\n", count.Int64)
 
 	return int(count.Int64), nil
 }

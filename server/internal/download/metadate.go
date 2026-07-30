@@ -4,17 +4,19 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"strconv"
+	"strings"
+	"time"
+
 	"server/rest/internal/config"
 	"server/rest/internal/database"
 	"server/rest/internal/models"
 	"server/rest/internal/utils"
-	"strconv"
-	"strings"
-	"time"
 )
 
 func FetchFilesMetadata() {
 	gameCounts := GameCounts()
+	log.Printf("found %d game files to check for metadata", len(gameCounts))
 
 	id := 0
 	for filename, count := range gameCounts {
@@ -51,9 +53,12 @@ func FetchFilesMetadata() {
 
 		id++
 	}
+
+	log.Println("metadata fetch complete")
 }
 
 func GameCounts() map[string]int {
+	log.Println("fetching game counts")
 	response, err := http.Get(config.GAME_COUNTS_URL)
 	if err != nil {
 		log.Fatal(err)
