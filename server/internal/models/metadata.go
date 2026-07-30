@@ -5,6 +5,6 @@ type Metadata struct {
 	Filename   string
 	Games      int
 	Id         int
-	Processed  bool
+	Processed  int
 	Downloaded bool
 }

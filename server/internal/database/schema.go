@@ -26,7 +26,7 @@ func InitializeDatabase() error {
               url       TEXT NOT NULL,
               filename  TEXT NOT NULL,
               games     INTEGER NOT NULL,
-              processed BOOLEAN NOT NULL DEFAULT FALSE,
+              processed INTEGER NOT NULL DEFAULT 0,
               downloaded BOOLEAN NOT NULL DEFAULT FALSE
       )`,
 	)
