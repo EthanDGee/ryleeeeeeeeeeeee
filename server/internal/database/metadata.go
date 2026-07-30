@@ -2,6 +2,7 @@ package database
 
 import (
 	"database/sql"
+	"fmt"
 
 	"server/rest/internal/config"
 	"server/rest/internal/models"
@@ -89,4 +90,21 @@ func MarkDownloaded(id int) (bool, error) {
 		return false, err
 	}
 	return true, nil
+}
+
+func CountDownloaded() (int, error) {
+	db, err := sql.Open("turso", config.LOCAL_DATABASE_PATH)
+	if err != nil {
+		return 0, err
+	}
+	defer utils.Close(db, "database")
+
+	var count sql.NullInt64
+	if err := db.QueryRow(`SELECT SUM(games) FROM metadata WHERE downloaded = true`).Scan(&count); err != nil {
+		return 0, err
+	}
+
+	fmt.Printf("Downloaded Games: %d\n", count.Int64)
+
+	return int(count.Int64), nil
 }
