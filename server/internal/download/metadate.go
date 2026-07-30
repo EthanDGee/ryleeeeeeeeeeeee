@@ -17,6 +17,17 @@ func FetchFilesMetadata() {
 
 	id := 0
 	for filename, count := range gameCounts {
+		exists, err := database.MetadataExists(filename)
+		if err != nil {
+			log.Printf("failed to look up metadata for %s: %v", filename, err)
+			id++
+			continue
+		}
+		if exists {
+			id++
+			continue
+		}
+
 		fileUrl := config.LICHESS_BASE_URL + filename
 		resp, err := http.Head(fileUrl)
 		if err != nil {

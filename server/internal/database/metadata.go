@@ -61,6 +61,25 @@ func GetAllMetadata() ([]models.Metadata, error) {
 	return results, rows.Err()
 }
 
+func MetadataExists(filename string) (bool, error) {
+	db, err := sql.Open("turso", config.LOCAL_DATABASE_PATH)
+	if err != nil {
+		return false, err
+	}
+	defer utils.Close(db, "database")
+
+	var id int
+	err = db.QueryRow(`SELECT id FROM metadata WHERE filename = ?`, filename).Scan(&id)
+	switch {
+	case err == sql.ErrNoRows:
+		return false, nil
+	case err != nil:
+		return false, err
+	default:
+		return true, nil
+	}
+}
+
 func GetSmallestUndownloadedFile() (models.Metadata, error) {
 	db, err := sql.Open("turso", config.LOCAL_DATABASE_PATH)
 	if err != nil {
