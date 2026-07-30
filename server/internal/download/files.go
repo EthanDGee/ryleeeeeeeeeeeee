@@ -49,3 +49,24 @@ func FetchGameFile(metadata models.Metadata) {
 		log.Fatalf("Failed to mark %s as downloaded", metadata.Filename)
 	}
 }
+
+func EnsureNGamesDownloaded(n int) {
+	downloadedCount, err := database.CountDownloaded()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for downloadedCount < n {
+		nextFile, err := database.GetSmallestUndownloadedFile()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		FetchGameFile(nextFile)
+		downloadedCount, err = database.CountDownloaded()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+	}
+}

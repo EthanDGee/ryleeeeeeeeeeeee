@@ -2,6 +2,8 @@ package main
 
 import (
 	"log"
+
+	"server/rest/internal/config"
 	"server/rest/internal/database"
 	"server/rest/internal/download"
 
@@ -14,4 +16,6 @@ func main() {
 	}
 
 	download.FetchFilesMetadata()
+
+	download.EnsureNGamesDownloaded(config.GAME_COUNT)
 }
