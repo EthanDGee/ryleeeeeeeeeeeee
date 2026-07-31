@@ -75,5 +75,5 @@ func EnsureNGamesDownloaded(n int) {
 		log.Printf("downloaded games: %d/%d (%.1f%%)", downloadedCount, n, float64(downloadedCount)/float64(n)*100)
 	}
 
-	log.Println("finished ensuring games downloaded")
+	log.Printf("finished ensuring %d games downloaded\n", n)
 }

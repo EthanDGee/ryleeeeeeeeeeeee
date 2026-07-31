@@ -152,3 +152,18 @@ func CountDownloaded() (int, error) {
 
 	return int(count.Int64), nil
 }
+
+func CountProcessed() (int, error) {
+	db, err := sql.Open("turso", config.LOCAL_DATABASE_PATH)
+	if err != nil {
+		return 0, err
+	}
+	defer utils.Close(db, "database")
+
+	var count sql.NullInt64
+	if err := db.QueryRow(`SELECT SUM(processed) FROM metadata WHERE downloaded = true`).Scan(&count); err != nil {
+		return 0, err
+	}
+
+	return int(count.Int64), nil
+}
