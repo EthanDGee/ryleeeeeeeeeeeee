@@ -54,6 +54,7 @@ args = ["--force-exclude"]
 [[repos.hooks]]
 id = "typos"
 name = "Spell check commit message"
+args = ["--force-exclude"]
 stages = ["commit-msg"]
 
 
@@ -80,7 +81,7 @@ types_or = ["sql", "toml", "yaml"]
 
 [[repos]]
 repo = "https://github.com/astral-sh/ruff-pre-commit"
-rev = "v0.16.0"
+rev = "v0.16.1"
 
 [[repos.hooks]]
 id = "ruff"

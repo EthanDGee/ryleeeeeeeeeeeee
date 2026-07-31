@@ -2,7 +2,6 @@ package database
 
 import (
 	"database/sql"
-	"fmt"
 
 	"server/rest/internal/config"
 	"server/rest/internal/models"
@@ -97,6 +96,23 @@ func GetSmallestUndownloadedFile() (models.Metadata, error) {
 	return metadata, nil
 }
 
+func GetSmallestUnprocessedFile() (models.Metadata, error) {
+	db, err := sql.Open("turso", config.LOCAL_DATABASE_PATH)
+	if err != nil {
+		return models.Metadata{}, err
+	}
+	defer utils.Close(db, "database")
+
+	row := db.QueryRow(`SELECT id, url, filename, games, processed, downloaded FROM metadata WHERE processed < games ORDER BY games - processed ASC LIMIT 1`)
+
+	var metadata models.Metadata
+	if err := row.Scan(&metadata.Id, &metadata.Url, &metadata.Filename, &metadata.Games, &metadata.Processed, &metadata.Downloaded); err != nil {
+		return models.Metadata{}, err
+	}
+
+	return metadata, nil
+}
+
 func MarkDownloaded(id int) (bool, error) {
 	db, err := sql.Open("turso", config.LOCAL_DATABASE_PATH)
 	if err != nil {
@@ -111,6 +127,17 @@ func MarkDownloaded(id int) (bool, error) {
 	return true, nil
 }
 
+func IncrementProcessed(id int) error {
+	db, err := sql.Open("turso", config.LOCAL_DATABASE_PATH)
+	if err != nil {
+		return err
+	}
+	defer utils.Close(db, "database")
+
+	_, err = db.Exec(`UPDATE metadata SET processed = processed + 1 WHERE id = ?`, id)
+	return err
+}
+
 func CountDownloaded() (int, error) {
 	db, err := sql.Open("turso", config.LOCAL_DATABASE_PATH)
 	if err != nil {
@@ -123,7 +150,20 @@ func CountDownloaded() (int, error) {
 		return 0, err
 	}
 
-	fmt.Printf("Downloaded Games: %d\n", count.Int64)
+	return int(count.Int64), nil
+}
+
+func CountProcessed() (int, error) {
+	db, err := sql.Open("turso", config.LOCAL_DATABASE_PATH)
+	if err != nil {
+		return 0, err
+	}
+	defer utils.Close(db, "database")
+
+	var count sql.NullInt64
+	if err := db.QueryRow(`SELECT SUM(processed) FROM metadata WHERE downloaded = true`).Scan(&count); err != nil {
+		return 0, err
+	}
 
 	return int(count.Int64), nil
 }

@@ -2,6 +2,7 @@ package database
 
 import (
 	"database/sql"
+	"log"
 	"os"
 
 	"server/rest/internal/config"
@@ -30,5 +31,41 @@ func InitializeDatabase() error {
               downloaded BOOLEAN NOT NULL DEFAULT FALSE
       )`,
 	)
-	return err
+	if err != nil {
+		return err
+	}
+
+	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS game (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		fileId INTEGER NOT NULL,
+		PGN TEXT NOT NULL,
+		processed BOOL NOT NULL DEFAULT FALSE,
+
+		result TEXT,
+
+		whiteElo INTEGER,
+		blackElo INTEGER,
+		whiteRatingDiff INTEGER,
+		blackRatingDiff INTEGER,
+
+		timeControl TEXT,
+
+		eco TEXT,
+
+		termination TEXT,
+
+		timestamp DATETIME,
+
+		variant TEXT,
+
+		totalMoves INTEGER,
+
+		FOREIGN KEY(fileId) REFERENCES metadata(id)
+		)`)
+	if err != nil {
+		return err
+	}
+
+	log.Println("database initialized")
+	return nil
 }
