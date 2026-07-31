@@ -2,13 +2,39 @@ package database
 
 import (
 	"database/sql"
+	"log"
+	"strconv"
+	"time"
 
 	"server/rest/internal/config"
 	"server/rest/internal/models"
 	"server/rest/internal/utils"
+
+	"github.com/corentings/chess/v2"
 )
 
-func InsertGames(games []models.Game) error {
+const tagTimestampLayout = "2006.01.02 15:04:05"
+
+func parseTagInt(game *chess.Game, key string) int {
+	value, err := strconv.Atoi(game.GetTagPair(key))
+	if err != nil {
+		return 0
+	}
+	return value
+}
+
+func parseTagTimestamp(game *chess.Game) *time.Time {
+	date := game.GetTagPair("UTCDate")
+	timeOfDay := game.GetTagPair("UTCTime")
+	timestamp, err := time.Parse(tagTimestampLayout, date+" "+timeOfDay)
+	if err != nil {
+		log.Printf("failed to parse game timestamp (UTCDate=%q UTCTime=%q): %v", date, timeOfDay, err)
+		return nil
+	}
+	return &timestamp
+}
+
+func InsertGame(game chess.Game, metadata models.Metadata) error {
 	db, err := sql.Open("turso", config.LOCAL_DATABASE_PATH)
 	if err != nil {
 		return err
@@ -22,10 +48,10 @@ func InsertGames(games []models.Game) error {
 
 	stmt, err := tx.Prepare(
 		`INSERT INTO game (
-			fileId, PGN, processed, result,
-			whiteElo, blackElo, whiteRatingDiff, blackRatingDiff,
-			timeControl, eco, termination, timestamp, variant, totalMoves
-		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+			fileId, PGN, result, whiteElo, blackElo, whiteRatingDiff,
+			blackRatingDiff, timeControl, eco, termination,
+			timestamp, variant, totalMoves
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 	)
 	if err != nil {
 		rollbackErr := tx.Rollback()
@@ -36,20 +62,26 @@ func InsertGames(games []models.Game) error {
 	}
 	defer utils.Close(stmt, "statement")
 
-	for _, game := range games {
-		_, err = stmt.Exec(
-			game.FileID, game.PGN, game.Processed, game.Result,
-			game.WhiteElo, game.BlackElo, game.WhiteRatingDiff, game.BlackRatingDiff,
-			game.TimeControl, game.ECO, game.Termination, game.Timestamp, game.Variant, game.TotalMoves,
-		)
-		if err != nil {
-			rollbackErr := tx.Rollback()
-			if rollbackErr != nil {
-				return rollbackErr
-			}
-			return err
+	_, err = stmt.Exec(
+		metadata.Id, game.String(), string(game.Outcome()),
+		parseTagInt(&game, "WhiteElo"), parseTagInt(&game, "BlackElo"),
+		parseTagInt(&game, "WhiteRatingDiff"), parseTagInt(&game, "BlackRatingDiff"),
+		game.GetTagPair("TimeControl"), game.GetTagPair("ECO"), game.GetTagPair("Termination"),
+		parseTagTimestamp(&game), game.GetTagPair("Variant"), len(game.Moves()),
+	)
+	if err != nil {
+		rollbackErr := tx.Rollback()
+		if rollbackErr != nil {
+			return rollbackErr
 		}
+		return err
 	}
 
-	return tx.Commit()
+	err = tx.Commit()
+	if err != nil {
+		log.Fatal(err)
+		return err
+	}
+
+	return IncrementProcessed(metadata.Id)
 }
