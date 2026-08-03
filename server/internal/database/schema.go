@@ -59,6 +59,8 @@ func InitializeDatabase() error {
 		variant TEXT,
 
 		totalMoves INTEGER,
+		minMoveId INTEGER,
+		maxMoveId INTEGER,
 
 		FOREIGN KEY(fileId) REFERENCES metadata(id)
 		)`)

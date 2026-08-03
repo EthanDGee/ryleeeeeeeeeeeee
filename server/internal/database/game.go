@@ -35,7 +35,7 @@ func parseTagTimestamp(game *chess.Game) *time.Time {
 	return &timestamp
 }
 
-func InsertGame(game chess.Game, metadata models.Metadata) error {
+func InsertGame(game chess.Game, minMoveId int, metadata models.Metadata) error {
 	db, err := sql.Open("turso", config.LOCAL_DATABASE_PATH)
 	if err != nil {
 		return err
@@ -87,6 +87,21 @@ func InsertGame(game chess.Game, metadata models.Metadata) error {
 	return IncrementProcessed(metadata.Id)
 }
 
+func TotalMovesPlayed() (int, error) {
+	db, err := sql.Open("turso", config.LOCAL_DATABASE_PATH)
+	if err != nil {
+		return 0, err
+	}
+	defer utils.Close(db, "database")
+
+	var count sql.NullInt64
+	if err := db.QueryRow(`SELECT SUM(totalMoves) FROM game`).Scan(&count); err != nil {
+		return 0, err
+	}
+
+	return int(count.Int64), nil
+}
+
 func InsertGames(games []chess.Game, metadata models.Metadata) error {
 	if len(games) == 0 {
 		return nil
@@ -98,30 +113,44 @@ func InsertGames(games []chess.Game, metadata models.Metadata) error {
 	}
 	defer utils.Close(db, "database")
 
+	minMoveID, err := TotalMovesPlayed()
+	if err != nil {
+		return err
+	}
+
 	tx, err := db.Begin()
 	if err != nil {
 		return err
 	}
 
-	const columnsPerRow = 13
+	const columnsPerRow = 15
 	valuePlaceholders := make([]string, len(games))
 	args := make([]any, 0, len(games)*columnsPerRow)
 
 	for i, game := range games {
-		valuePlaceholders[i] = "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-		args = append(args,
+		valuePlaceholders[i] = "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+
+		moveCount := len(game.Moves())
+		if minMoveID == 0 {
+			moveCount -= 1
+		}
+		maxMoveID := minMoveID + moveCount
+
+		args = append(
+			args,
 			metadata.Id, game.String(), string(game.Outcome()),
 			parseTagInt(&game, "WhiteElo"), parseTagInt(&game, "BlackElo"),
 			parseTagInt(&game, "WhiteRatingDiff"), parseTagInt(&game, "BlackRatingDiff"),
 			game.GetTagPair("TimeControl"), game.GetTagPair("ECO"), game.GetTagPair("Termination"),
-			parseTagTimestamp(&game), game.GetTagPair("Variant"), len(game.Moves()),
+			parseTagTimestamp(&game), game.GetTagPair("Variant"), moveCount, minMoveID, maxMoveID,
 		)
+		minMoveID = maxMoveID + 1
 	}
 
 	query := `INSERT INTO game (
 		fileId, PGN, result, whiteElo, blackElo, whiteRatingDiff,
 		blackRatingDiff, timeControl, eco, termination,
-		timestamp, variant, totalMoves
+		timestamp, variant, totalMoves, minMoveId, maxMoveId
 	) VALUES ` + strings.Join(valuePlaceholders, ", ")
 
 	_, err = tx.Exec(query, args...)
