@@ -138,6 +138,17 @@ func IncrementProcessed(id int) error {
 	return err
 }
 
+func IncrementProcessedBy(id int, count int) error {
+	db, err := sql.Open("turso", config.LOCAL_DATABASE_PATH)
+	if err != nil {
+		return err
+	}
+	defer utils.Close(db, "database")
+
+	_, err = db.Exec(`UPDATE metadata SET processed = processed + ? WHERE id = ?`, count, id)
+	return err
+}
+
 func CountDownloaded() (int, error) {
 	db, err := sql.Open("turso", config.LOCAL_DATABASE_PATH)
 	if err != nil {

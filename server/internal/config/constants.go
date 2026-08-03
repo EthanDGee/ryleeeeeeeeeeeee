@@ -6,5 +6,6 @@ const (
 	CACHE_FOLDER        = ".cache/"
 	LOCAL_DATABASE_PATH = CACHE_FOLDER + "app.db"
 	FILES_FOLDER        = CACHE_FOLDER + "files"
-	GAME_COUNT          = 1_000_000
+	GAME_COUNT          = 5_000_000
+	BATCH_SIZE          = 500
 )

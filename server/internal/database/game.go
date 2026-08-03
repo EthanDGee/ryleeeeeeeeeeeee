@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"log"
 	"strconv"
+	"strings"
 	"time"
 
 	"server/rest/internal/config"
@@ -84,4 +85,59 @@ func InsertGame(game chess.Game, metadata models.Metadata) error {
 	}
 
 	return IncrementProcessed(metadata.Id)
+}
+
+func InsertGames(games []chess.Game, metadata models.Metadata) error {
+	if len(games) == 0 {
+		return nil
+	}
+
+	db, err := sql.Open("turso", config.LOCAL_DATABASE_PATH)
+	if err != nil {
+		return err
+	}
+	defer utils.Close(db, "database")
+
+	tx, err := db.Begin()
+	if err != nil {
+		return err
+	}
+
+	const columnsPerRow = 13
+	valuePlaceholders := make([]string, len(games))
+	args := make([]any, 0, len(games)*columnsPerRow)
+
+	for i, game := range games {
+		valuePlaceholders[i] = "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+		args = append(args,
+			metadata.Id, game.String(), string(game.Outcome()),
+			parseTagInt(&game, "WhiteElo"), parseTagInt(&game, "BlackElo"),
+			parseTagInt(&game, "WhiteRatingDiff"), parseTagInt(&game, "BlackRatingDiff"),
+			game.GetTagPair("TimeControl"), game.GetTagPair("ECO"), game.GetTagPair("Termination"),
+			parseTagTimestamp(&game), game.GetTagPair("Variant"), len(game.Moves()),
+		)
+	}
+
+	query := `INSERT INTO game (
+		fileId, PGN, result, whiteElo, blackElo, whiteRatingDiff,
+		blackRatingDiff, timeControl, eco, termination,
+		timestamp, variant, totalMoves
+	) VALUES ` + strings.Join(valuePlaceholders, ", ")
+
+	_, err = tx.Exec(query, args...)
+	if err != nil {
+		rollbackErr := tx.Rollback()
+		if rollbackErr != nil {
+			return rollbackErr
+		}
+		return err
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		log.Fatal(err)
+		return err
+	}
+
+	return IncrementProcessedBy(metadata.Id, len(games))
 }
