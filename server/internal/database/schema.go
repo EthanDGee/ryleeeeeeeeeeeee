@@ -39,22 +39,6 @@ func InitializeDatabase() error {
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		fileId INTEGER NOT NULL,
 		PGN TEXT NOT NULL,
-		processed BOOL NOT NULL DEFAULT FALSE,
-
-		result TEXT,
-
-		whiteElo INTEGER,
-		blackElo INTEGER,
-		whiteRatingDiff INTEGER,
-		blackRatingDiff INTEGER,
-
-		timeControl TEXT,
-
-		eco TEXT,
-
-		termination TEXT,
-
-		variant TEXT,
 
 		totalPlys INTEGER,
 		minPlyId INTEGER,

@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"log"
 	"strings"
-	"time"
 
 	"server/rest/internal/config"
 	"server/rest/internal/models"
@@ -13,21 +12,8 @@ import (
 	"github.com/corentings/chess/v2"
 )
 
-const tagTimestampLayout = "2006.01.02 15:04:05"
-
 func ParseTagInt(game *chess.Game, key string) int {
 	return models.TagInt(game, key)
-}
-
-func ParseTagTimestamp(game *chess.Game) *time.Time {
-	date := game.GetTagPair("UTCDate")
-	timeOfDay := game.GetTagPair("UTCTime")
-	timestamp, err := time.Parse(tagTimestampLayout, date+" "+timeOfDay)
-	if err != nil {
-		log.Printf("failed to parse game timestamp (UTCDate=%q UTCTime=%q): %v", date, timeOfDay, err)
-		return nil
-	}
-	return &timestamp
 }
 
 func InsertGame(game chess.Game, minPlyID int, metadata models.Metadata) error {
@@ -44,9 +30,8 @@ func InsertGame(game chess.Game, minPlyID int, metadata models.Metadata) error {
 
 	stmt, err := tx.Prepare(
 		`INSERT INTO game (
-			fileId, PGN, result, whiteElo, blackElo, whiteRatingDiff,
-			blackRatingDiff, eco, termination,  totalPlys
-		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+			fileId, PGN,  totalPlys, minPlyId, maxPlyId
+		) VALUES (?, ?, ?, ?,  ?)`,
 	)
 	if err != nil {
 		rollbackErr := tx.Rollback()
@@ -57,10 +42,14 @@ func InsertGame(game chess.Game, minPlyID int, metadata models.Metadata) error {
 	}
 	defer utils.Close(stmt, "statement")
 
+	plyCount := len(game.Moves())
+	if minPlyID == 0 {
+		plyCount -= 1
+	}
+
 	_, err = stmt.Exec(
-		metadata.Id, game.String(), string(game.Outcome()),
-		ParseTagInt(&game, "WhiteElo"), ParseTagInt(&game, "BlackElo"),
-		ParseTagInt(&game, "WhiteRatingDiff"), ParseTagInt(&game, "BlackRatingDiff"),
+		metadata.Id, game.String(),
+		plyCount, minPlyID, minPlyID+plyCount,
 	)
 	if err != nil {
 		rollbackErr := tx.Rollback()
@@ -115,12 +104,12 @@ func InsertGames(games []chess.Game, metadata models.Metadata) error {
 		return err
 	}
 
-	const columnsPerRow = 15
+	const columnsPerRow = 5
 	valuePlaceholders := make([]string, len(games))
 	args := make([]any, 0, len(games)*columnsPerRow)
 
 	for i, game := range games {
-		valuePlaceholders[i] = "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+		valuePlaceholders[i] = "(?, ?, ?, ?, ?)"
 
 		plyCount := len(game.Moves())
 		if minPlyID == 0 {
@@ -130,17 +119,13 @@ func InsertGames(games []chess.Game, metadata models.Metadata) error {
 
 		args = append(
 			args,
-			metadata.Id, game.String(), string(game.Outcome()),
-			ParseTagInt(&game, "WhiteElo"), ParseTagInt(&game, "BlackElo"),
-			ParseTagInt(&game, "WhiteRatingDiff"), ParseTagInt(&game, "BlackRatingDiff"),
+			metadata.Id, game.String(), plyCount, minPlyID, maxPlyID,
 		)
 		minPlyID = maxPlyID + 1
 	}
 
 	query := `INSERT INTO game (
-		fileId, PGN, result, whiteElo, blackElo, whiteRatingDiff,
-		blackRatingDiff, eco, termination,
-		totalPlys, minPlyId, maxPlyId
+		fileId, PGN, totalPlys, minPlyId, maxPlyId
 	) VALUES ` + strings.Join(valuePlaceholders, ", ")
 
 	_, err = tx.Exec(query, args...)

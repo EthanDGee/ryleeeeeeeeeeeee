@@ -43,7 +43,7 @@ func GetAllMetadata() ([]models.Metadata, error) {
 	}
 	defer utils.Close(db, "database")
 
-	rows, err := db.Query(`SELECT id, url, filename, games, processed FROM metadata`)
+	rows, err := db.Query(`SELECT id, url, filename, games, processed, downloaded FROM metadata`)
 	if err != nil {
 		return nil, err
 	}
@@ -52,7 +52,7 @@ func GetAllMetadata() ([]models.Metadata, error) {
 	var results []models.Metadata
 	for rows.Next() {
 		var metadata models.Metadata
-		if err := rows.Scan(&metadata.Id, &metadata.Url, &metadata.Filename, &metadata.Games, &metadata.Processed); err != nil {
+		if err := rows.Scan(&metadata.Id, &metadata.Url, &metadata.Filename, &metadata.Games, &metadata.Processed, &metadata.Downloaded); err != nil {
 			return nil, err
 		}
 		results = append(results, metadata)
