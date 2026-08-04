@@ -51,7 +51,20 @@ func ProcessFile(metadata models.Metadata, cap int) error {
 
 		game, err := scanner.ParseNext()
 		if err != nil {
-			log.Fatalf("Failed to process game: %d from %s", gameIndex, metadata.Filename)
+			log.Printf("Failed to process game: %d from %s\n", gameIndex, metadata.Filename)
+
+			err = database.IncrementCorrupted(metadata.Id)
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			err = database.IncrementProcessed(metadata.Id)
+			if err != nil {
+				log.Fatal(err)
+			}
+			// since we failed to parse we don't increment the
+			// index and move onto the next game.
+			continue
 		}
 
 		batch = append(batch, *game)
@@ -63,9 +76,7 @@ func ProcessFile(metadata models.Metadata, cap int) error {
 				log.Printf("failed to insert batch ending at game %d from %s: %v", gameIndex, metadata.Filename, err)
 				return err
 			}
-			if gameIndex%5000 == 0 {
-				log.Printf("inserted game %d from %s", gameIndex, metadata.Filename)
-			}
+			log.Printf("inserted game %d from %s", gameIndex, metadata.Filename)
 			batch = batch[:0]
 		}
 	}

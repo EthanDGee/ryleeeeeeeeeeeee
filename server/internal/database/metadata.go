@@ -140,6 +140,16 @@ func IncrementProcessedBy(id int, count int) error {
 	return err
 }
 
+func IncrementCorrupted(id int) error {
+	db, err := DB()
+	if err != nil {
+		return err
+	}
+
+	_, err = db.Exec(`UPDATE metadata SET corrupted = corrupted + 1 WHERE id = ?`, id)
+	return err
+}
+
 func CountDownloaded() (int, error) {
 	db, err := DB()
 	if err != nil {

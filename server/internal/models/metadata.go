@@ -6,5 +6,6 @@ type Metadata struct {
 	Games      int
 	Id         int
 	Processed  int
+	Corrupted  int
 	Downloaded bool
 }

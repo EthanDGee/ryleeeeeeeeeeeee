@@ -13,12 +13,13 @@ func InitializeDatabase() error {
 	_, err = db.Exec(
 		`
       CREATE TABLE IF NOT EXISTS metadata (
-              id        INTEGER PRIMARY KEY AUTOINCREMENT,
-              url       TEXT NOT NULL,
-              filename  TEXT NOT NULL,
-              games     INTEGER NOT NULL,
-              processed INTEGER NOT NULL DEFAULT 0,
-              downloaded BOOLEAN NOT NULL DEFAULT FALSE
+              id         INTEGER PRIMARY KEY AUTOINCREMENT,
+              url        TEXT NOT NULL,
+              filename   TEXT NOT NULL,
+              games      INTEGER NOT NULL,
+              processed  INTEGER NOT NULL DEFAULT 0,
+				      corrupted  INTEGER NOT NULL DEFAULT 0,
+				      downloaded BOOLEAN NOT NULL DEFAULT FALSE
       )`,
 	)
 	if err != nil {
