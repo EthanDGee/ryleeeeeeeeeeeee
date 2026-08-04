@@ -30,12 +30,8 @@ func emptyPieceGrid() [][]bool {
 	return grid
 }
 
-func NewBoardGrid(game *chess.Game) (BoardGrid, error) {
-	if game == nil {
-		return BoardGrid{}, errors.New("models: nil game")
-	}
-	pos := game.Position()
-	if pos == nil {
+func NewBoardGrid(position *chess.Position) (BoardGrid, error) {
+	if position == nil {
 		return BoardGrid{}, errors.New("models: game has no position")
 	}
 
@@ -69,7 +65,7 @@ func NewBoardGrid(game *chess.Game) (BoardGrid, error) {
 		chess.BlackKing:   grid.BlackKing,
 	}
 
-	for square, piece := range pos.Board().SquareMap() {
+	for square, piece := range position.Board().SquareMap() {
 		plane, ok := planes[piece]
 		if !ok {
 			continue

@@ -54,13 +54,11 @@ func InitializeDatabase() error {
 
 		termination TEXT,
 
-		timestamp DATETIME,
-
 		variant TEXT,
 
-		totalMoves INTEGER,
-		minMoveId INTEGER,
-		maxMoveId INTEGER,
+		totalPlys INTEGER,
+		minPlyId INTEGER,
+		maxPlyId INTEGER,
 
 		FOREIGN KEY(fileId) REFERENCES metadata(id)
 		)`)
