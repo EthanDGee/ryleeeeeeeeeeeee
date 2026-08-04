@@ -2,11 +2,9 @@ package database
 
 import (
 	"database/sql"
-	"log"
 	"strings"
 
 	"server/rest/internal/models"
-	"server/rest/internal/utils"
 
 	"github.com/corentings/chess/v2"
 )
@@ -15,58 +13,9 @@ func ParseTagInt(game *chess.Game, key string) int {
 	return models.TagInt(game, key)
 }
 
-func InsertGame(game chess.Game, minPlyID int, metadata models.Metadata) error {
-	db, err := DB()
-	if err != nil {
-		return err
-	}
-
-	tx, err := db.Begin()
-	if err != nil {
-		return err
-	}
-
-	stmt, err := tx.Prepare(
-		`INSERT INTO game (
-			fileId, PGN,  totalPlys, minPlyId, maxPlyId
-		) VALUES (?, ?, ?, ?,  ?)`,
-	)
-	if err != nil {
-		rollbackErr := tx.Rollback()
-		if rollbackErr != nil {
-			return rollbackErr
-		}
-		return err
-	}
-	defer utils.Close(stmt, "statement")
-
-	plyCount := len(game.Moves())
-	if minPlyID == 0 {
-		plyCount -= 1
-	}
-
-	_, err = stmt.Exec(
-		metadata.Id, game.String(),
-		plyCount, minPlyID, minPlyID+plyCount,
-	)
-	if err != nil {
-		rollbackErr := tx.Rollback()
-		if rollbackErr != nil {
-			return rollbackErr
-		}
-		return err
-	}
-
-	err = tx.Commit()
-	if err != nil {
-		log.Fatal(err)
-		return err
-	}
-
-	return IncrementProcessed(metadata.Id)
-}
-
-func TotalPlysPlayed() (int, error) {
+// NextPlyID scans the whole game table, so call it once when resuming rather
+// than once per batch.
+func NextPlyID() (int, error) {
 	db, err := DB()
 	if err != nil {
 		return 0, err
@@ -80,64 +29,66 @@ func TotalPlysPlayed() (int, error) {
 	return int(count.Int64), nil
 }
 
-func InsertGames(games []chess.Game, metadata models.Metadata) error {
+// InsertGames gives each game a contiguous block of ply IDs starting at
+// nextPlyID and returns the first unused ply ID.
+func InsertGames(games []chess.Game, metadata models.Metadata, nextPlyID int) (int, error) {
 	if len(games) == 0 {
-		return nil
+		return nextPlyID, nil
 	}
 
 	db, err := DB()
 	if err != nil {
-		return err
-	}
-
-	minPlyID, err := TotalPlysPlayed()
-	if err != nil {
-		return err
+		return nextPlyID, err
 	}
 
 	tx, err := db.Begin()
 	if err != nil {
-		return err
+		return nextPlyID, err
 	}
+	defer func() {
+		_ = tx.Rollback() // no-op once Commit succeeded
+	}()
 
 	const columnsPerRow = 5
 	valuePlaceholders := make([]string, len(games))
 	args := make([]any, 0, len(games)*columnsPerRow)
 
+	plyID := nextPlyID
 	for i, game := range games {
 		valuePlaceholders[i] = "(?, ?, ?, ?, ?)"
 
-		plyCount := len(game.Moves())
-		if minPlyID == 0 {
-			plyCount -= 1
-		}
-		maxPlyID := minPlyID + plyCount
+		// n plies owns IDs [plyID, plyID+n-1], so ply p is ID plyID+p, matching
+		// the 0-based indexing models.MoveAtPly expects. A game with no plies
+		// gets an empty range that no lookup can match.
+		plyCount := len(game.MoveHistory())
 
 		args = append(
 			args,
-			metadata.Id, game.String(), plyCount, minPlyID, maxPlyID,
+			metadata.Id, game.String(), plyCount, plyID, plyID+plyCount-1,
 		)
-		minPlyID = maxPlyID + 1
+		plyID += plyCount
 	}
 
 	query := `INSERT INTO game (
 		fileId, PGN, totalPlys, minPlyId, maxPlyId
 	) VALUES ` + strings.Join(valuePlaceholders, ", ")
 
-	_, err = tx.Exec(query, args...)
-	if err != nil {
-		rollbackErr := tx.Rollback()
-		if rollbackErr != nil {
-			return rollbackErr
-		}
-		return err
+	if _, err := tx.Exec(query, args...); err != nil {
+		return nextPlyID, err
 	}
 
-	err = tx.Commit()
-	if err != nil {
-		log.Fatal(err)
-		return err
+	// Same transaction as the rows, so a crash cannot leave processed
+	// disagreeing with what was stored.
+	if _, err := tx.Exec(
+		`UPDATE metadata SET processed = processed + ? WHERE id = ?`,
+		len(games), metadata.Id,
+	); err != nil {
+		return nextPlyID, err
 	}
 
-	return IncrementProcessedBy(metadata.Id, len(games))
+	if err := tx.Commit(); err != nil {
+		return nextPlyID, err
+	}
+
+	return plyID, nil
 }

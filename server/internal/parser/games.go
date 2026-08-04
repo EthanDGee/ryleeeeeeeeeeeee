@@ -32,6 +32,11 @@ func ProcessFile(metadata models.Metadata, cap int) error {
 	preprocessedGames := metadata.Processed
 	log.Printf("processing %s: %d games total, %d already processed", metadata.Filename, metadata.Games, preprocessedGames)
 
+	nextPlyID, err := database.NextPlyID()
+	if err != nil {
+		return err
+	}
+
 	gameIndex := 0
 	batch := make([]chess.Game, 0, config.BATCH_SIZE)
 	for scanner.HasNext() && gameIndex < cap {
@@ -53,11 +58,12 @@ func ProcessFile(metadata models.Metadata, cap int) error {
 		gameIndex++
 
 		if len(batch) >= config.BATCH_SIZE {
-			if err := database.InsertGames(batch, metadata); err != nil {
+			nextPlyID, err = database.InsertGames(batch, metadata, nextPlyID)
+			if err != nil {
 				log.Printf("failed to insert batch ending at game %d from %s: %v", gameIndex, metadata.Filename, err)
 				return err
 			}
-			if gameIndex%1000 == 0 {
+			if gameIndex%5000 == 0 {
 				log.Printf("inserted game %d from %s", gameIndex, metadata.Filename)
 			}
 			batch = batch[:0]
@@ -65,7 +71,7 @@ func ProcessFile(metadata models.Metadata, cap int) error {
 	}
 
 	if len(batch) > 0 {
-		if err := database.InsertGames(batch, metadata); err != nil {
+		if _, err := database.InsertGames(batch, metadata, nextPlyID); err != nil {
 			log.Printf("failed to insert final batch from %s: %v", metadata.Filename, err)
 			return err
 		}
