@@ -1,22 +1,18 @@
 package database
 
 import (
-	"database/sql"
 	"strings"
 
-	"server/rest/internal/config"
 	"server/rest/internal/models"
-	"server/rest/internal/utils"
 
 	"github.com/corentings/chess/v2"
 )
 
 func GetPly(id int) (models.Snapshot, models.Target, error) {
-	db, err := sql.Open("turso", config.LOCAL_DATABASE_PATH)
+	db, err := DB()
 	if err != nil {
 		return models.Snapshot{}, models.Target{}, err
 	}
-	defer utils.Close(db, "database")
 
 	var (
 		pgn      string

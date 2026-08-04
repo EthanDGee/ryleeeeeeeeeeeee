@@ -5,7 +5,6 @@ import (
 	"log"
 	"strings"
 
-	"server/rest/internal/config"
 	"server/rest/internal/models"
 	"server/rest/internal/utils"
 
@@ -17,11 +16,10 @@ func ParseTagInt(game *chess.Game, key string) int {
 }
 
 func InsertGame(game chess.Game, minPlyID int, metadata models.Metadata) error {
-	db, err := sql.Open("turso", config.LOCAL_DATABASE_PATH)
+	db, err := DB()
 	if err != nil {
 		return err
 	}
-	defer utils.Close(db, "database")
 
 	tx, err := db.Begin()
 	if err != nil {
@@ -69,11 +67,10 @@ func InsertGame(game chess.Game, minPlyID int, metadata models.Metadata) error {
 }
 
 func TotalPlysPlayed() (int, error) {
-	db, err := sql.Open("turso", config.LOCAL_DATABASE_PATH)
+	db, err := DB()
 	if err != nil {
 		return 0, err
 	}
-	defer utils.Close(db, "database")
 
 	var count sql.NullInt64
 	if err := db.QueryRow(`SELECT SUM(totalPlys) FROM game`).Scan(&count); err != nil {
@@ -88,11 +85,10 @@ func InsertGames(games []chess.Game, metadata models.Metadata) error {
 		return nil
 	}
 
-	db, err := sql.Open("turso", config.LOCAL_DATABASE_PATH)
+	db, err := DB()
 	if err != nil {
 		return err
 	}
-	defer utils.Close(db, "database")
 
 	minPlyID, err := TotalPlysPlayed()
 	if err != nil {

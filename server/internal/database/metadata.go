@@ -3,17 +3,15 @@ package database
 import (
 	"database/sql"
 
-	"server/rest/internal/config"
 	"server/rest/internal/models"
 	"server/rest/internal/utils"
 )
 
 func UpsertMetadata(metadata models.Metadata) error {
-	db, err := sql.Open("turso", config.LOCAL_DATABASE_PATH)
+	db, err := DB()
 	if err != nil {
 		return err
 	}
-	defer utils.Close(db, "database")
 
 	var existingID int
 	err = db.QueryRow(`SELECT id FROM metadata WHERE filename = ?`, metadata.Filename).Scan(&existingID)
@@ -37,11 +35,10 @@ func UpsertMetadata(metadata models.Metadata) error {
 }
 
 func GetAllMetadata() ([]models.Metadata, error) {
-	db, err := sql.Open("turso", config.LOCAL_DATABASE_PATH)
+	db, err := DB()
 	if err != nil {
 		return nil, err
 	}
-	defer utils.Close(db, "database")
 
 	rows, err := db.Query(`SELECT id, url, filename, games, processed, downloaded FROM metadata`)
 	if err != nil {
@@ -61,11 +58,10 @@ func GetAllMetadata() ([]models.Metadata, error) {
 }
 
 func MetadataExists(filename string) (bool, error) {
-	db, err := sql.Open("turso", config.LOCAL_DATABASE_PATH)
+	db, err := DB()
 	if err != nil {
 		return false, err
 	}
-	defer utils.Close(db, "database")
 
 	var id int
 	err = db.QueryRow(`SELECT id FROM metadata WHERE filename = ?`, filename).Scan(&id)
@@ -80,11 +76,10 @@ func MetadataExists(filename string) (bool, error) {
 }
 
 func GetSmallestUndownloadedFile() (models.Metadata, error) {
-	db, err := sql.Open("turso", config.LOCAL_DATABASE_PATH)
+	db, err := DB()
 	if err != nil {
 		return models.Metadata{}, err
 	}
-	defer utils.Close(db, "database")
 
 	row := db.QueryRow(`SELECT id, url, filename, games, processed, downloaded FROM metadata WHERE downloaded = false ORDER BY games ASC LIMIT 1`)
 
@@ -97,11 +92,10 @@ func GetSmallestUndownloadedFile() (models.Metadata, error) {
 }
 
 func GetSmallestUnprocessedFile() (models.Metadata, error) {
-	db, err := sql.Open("turso", config.LOCAL_DATABASE_PATH)
+	db, err := DB()
 	if err != nil {
 		return models.Metadata{}, err
 	}
-	defer utils.Close(db, "database")
 
 	row := db.QueryRow(`SELECT id, url, filename, games, processed, downloaded FROM metadata WHERE processed < games ORDER BY games - processed ASC LIMIT 1`)
 
@@ -114,11 +108,10 @@ func GetSmallestUnprocessedFile() (models.Metadata, error) {
 }
 
 func MarkDownloaded(id int) (bool, error) {
-	db, err := sql.Open("turso", config.LOCAL_DATABASE_PATH)
+	db, err := DB()
 	if err != nil {
 		return false, err
 	}
-	defer utils.Close(db, "database")
 
 	_, err = db.Exec(`UPDATE metadata SET downloaded = true WHERE id = ?`, id)
 	if err != nil {
@@ -128,33 +121,30 @@ func MarkDownloaded(id int) (bool, error) {
 }
 
 func IncrementProcessed(id int) error {
-	db, err := sql.Open("turso", config.LOCAL_DATABASE_PATH)
+	db, err := DB()
 	if err != nil {
 		return err
 	}
-	defer utils.Close(db, "database")
 
 	_, err = db.Exec(`UPDATE metadata SET processed = processed + 1 WHERE id = ?`, id)
 	return err
 }
 
 func IncrementProcessedBy(id int, count int) error {
-	db, err := sql.Open("turso", config.LOCAL_DATABASE_PATH)
+	db, err := DB()
 	if err != nil {
 		return err
 	}
-	defer utils.Close(db, "database")
 
 	_, err = db.Exec(`UPDATE metadata SET processed = processed + ? WHERE id = ?`, count, id)
 	return err
 }
 
 func CountDownloaded() (int, error) {
-	db, err := sql.Open("turso", config.LOCAL_DATABASE_PATH)
+	db, err := DB()
 	if err != nil {
 		return 0, err
 	}
-	defer utils.Close(db, "database")
 
 	var count sql.NullInt64
 	if err := db.QueryRow(`SELECT SUM(games) FROM metadata WHERE downloaded = true`).Scan(&count); err != nil {
@@ -165,11 +155,10 @@ func CountDownloaded() (int, error) {
 }
 
 func CountProcessed() (int, error) {
-	db, err := sql.Open("turso", config.LOCAL_DATABASE_PATH)
+	db, err := DB()
 	if err != nil {
 		return 0, err
 	}
-	defer utils.Close(db, "database")
 
 	var count sql.NullInt64
 	if err := db.QueryRow(`SELECT SUM(processed) FROM metadata WHERE downloaded = true`).Scan(&count); err != nil {
