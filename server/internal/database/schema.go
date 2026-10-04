@@ -41,6 +41,16 @@ func InitializeDatabase() error {
 		return err
 	}
 
+	_, err = db.Exec(`CREATE INDEX IF NOT EXISTS idx_game_min_ply ON game(minPlyId)`)
+	if err != nil {
+		return err
+	}
+
+	_, err = db.Exec(`CREATE INDEX IF NOT EXISTS idx_game_max_ply ON game(maxPlyId)`)
+	if err != nil {
+		return err
+	}
+
 	log.Println("database initialized")
 	return nil
 }
