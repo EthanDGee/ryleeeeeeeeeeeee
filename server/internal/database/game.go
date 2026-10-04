@@ -2,171 +2,93 @@ package database
 
 import (
 	"database/sql"
-	"log"
-	"strconv"
 	"strings"
-	"time"
 
-	"server/rest/internal/config"
 	"server/rest/internal/models"
-	"server/rest/internal/utils"
 
 	"github.com/corentings/chess/v2"
 )
 
-const tagTimestampLayout = "2006.01.02 15:04:05"
-
-func parseTagInt(game *chess.Game, key string) int {
-	value, err := strconv.Atoi(game.GetTagPair(key))
-	if err != nil {
-		return 0
-	}
-	return value
+func ParseTagInt(game *chess.Game, key string) int {
+	return models.TagInt(game, key)
 }
 
-func parseTagTimestamp(game *chess.Game) *time.Time {
-	date := game.GetTagPair("UTCDate")
-	timeOfDay := game.GetTagPair("UTCTime")
-	timestamp, err := time.Parse(tagTimestampLayout, date+" "+timeOfDay)
-	if err != nil {
-		log.Printf("failed to parse game timestamp (UTCDate=%q UTCTime=%q): %v", date, timeOfDay, err)
-		return nil
-	}
-	return &timestamp
-}
-
-func InsertGame(game chess.Game, minMoveId int, metadata models.Metadata) error {
-	db, err := sql.Open("turso", config.LOCAL_DATABASE_PATH)
-	if err != nil {
-		return err
-	}
-	defer utils.Close(db, "database")
-
-	tx, err := db.Begin()
-	if err != nil {
-		return err
-	}
-
-	stmt, err := tx.Prepare(
-		`INSERT INTO game (
-			fileId, PGN, result, whiteElo, blackElo, whiteRatingDiff,
-			blackRatingDiff, timeControl, eco, termination,
-			timestamp, variant, totalMoves
-		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-	)
-	if err != nil {
-		rollbackErr := tx.Rollback()
-		if rollbackErr != nil {
-			return rollbackErr
-		}
-		return err
-	}
-	defer utils.Close(stmt, "statement")
-
-	_, err = stmt.Exec(
-		metadata.Id, game.String(), string(game.Outcome()),
-		parseTagInt(&game, "WhiteElo"), parseTagInt(&game, "BlackElo"),
-		parseTagInt(&game, "WhiteRatingDiff"), parseTagInt(&game, "BlackRatingDiff"),
-		game.GetTagPair("TimeControl"), game.GetTagPair("ECO"), game.GetTagPair("Termination"),
-		parseTagTimestamp(&game), game.GetTagPair("Variant"), len(game.Moves()),
-	)
-	if err != nil {
-		rollbackErr := tx.Rollback()
-		if rollbackErr != nil {
-			return rollbackErr
-		}
-		return err
-	}
-
-	err = tx.Commit()
-	if err != nil {
-		log.Fatal(err)
-		return err
-	}
-
-	return IncrementProcessed(metadata.Id)
-}
-
-func TotalMovesPlayed() (int, error) {
-	db, err := sql.Open("turso", config.LOCAL_DATABASE_PATH)
+// NextPlyID scans the whole game table, so call it once when resuming rather
+// than once per batch.
+func NextPlyID() (int, error) {
+	db, err := DB()
 	if err != nil {
 		return 0, err
 	}
-	defer utils.Close(db, "database")
 
 	var count sql.NullInt64
-	if err := db.QueryRow(`SELECT SUM(totalMoves) FROM game`).Scan(&count); err != nil {
+	if err := db.QueryRow(`SELECT SUM(totalPlys) FROM game`).Scan(&count); err != nil {
 		return 0, err
 	}
 
 	return int(count.Int64), nil
 }
 
-func InsertGames(games []chess.Game, metadata models.Metadata) error {
+// InsertGames gives each game a contiguous block of ply IDs starting at
+// nextPlyID and returns the first unused ply ID.
+func InsertGames(games []chess.Game, metadata models.Metadata, nextPlyID int) (int, error) {
 	if len(games) == 0 {
-		return nil
+		return nextPlyID, nil
 	}
 
-	db, err := sql.Open("turso", config.LOCAL_DATABASE_PATH)
+	db, err := DB()
 	if err != nil {
-		return err
-	}
-	defer utils.Close(db, "database")
-
-	minMoveID, err := TotalMovesPlayed()
-	if err != nil {
-		return err
+		return nextPlyID, err
 	}
 
 	tx, err := db.Begin()
 	if err != nil {
-		return err
+		return nextPlyID, err
 	}
+	defer func() {
+		_ = tx.Rollback() // no-op once Commit succeeded
+	}()
 
-	const columnsPerRow = 15
+	const columnsPerRow = 5
 	valuePlaceholders := make([]string, len(games))
 	args := make([]any, 0, len(games)*columnsPerRow)
 
+	plyID := nextPlyID
 	for i, game := range games {
-		valuePlaceholders[i] = "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+		valuePlaceholders[i] = "(?, ?, ?, ?, ?)"
 
-		moveCount := len(game.Moves())
-		if minMoveID == 0 {
-			moveCount -= 1
-		}
-		maxMoveID := minMoveID + moveCount
+		// n plies owns IDs [plyID, plyID+n-1], so ply p is ID plyID+p, matching
+		// the 0-based indexing models.MoveAtPly expects. A game with no plies
+		// gets an empty range that no lookup can match.
+		plyCount := len(game.MoveHistory())
 
 		args = append(
 			args,
-			metadata.Id, game.String(), string(game.Outcome()),
-			parseTagInt(&game, "WhiteElo"), parseTagInt(&game, "BlackElo"),
-			parseTagInt(&game, "WhiteRatingDiff"), parseTagInt(&game, "BlackRatingDiff"),
-			game.GetTagPair("TimeControl"), game.GetTagPair("ECO"), game.GetTagPair("Termination"),
-			parseTagTimestamp(&game), game.GetTagPair("Variant"), moveCount, minMoveID, maxMoveID,
+			metadata.Id, game.String(), plyCount, plyID, plyID+plyCount-1,
 		)
-		minMoveID = maxMoveID + 1
+		plyID += plyCount
 	}
 
 	query := `INSERT INTO game (
-		fileId, PGN, result, whiteElo, blackElo, whiteRatingDiff,
-		blackRatingDiff, timeControl, eco, termination,
-		timestamp, variant, totalMoves, minMoveId, maxMoveId
+		fileId, PGN, totalPlys, minPlyId, maxPlyId
 	) VALUES ` + strings.Join(valuePlaceholders, ", ")
 
-	_, err = tx.Exec(query, args...)
-	if err != nil {
-		rollbackErr := tx.Rollback()
-		if rollbackErr != nil {
-			return rollbackErr
-		}
-		return err
+	if _, err := tx.Exec(query, args...); err != nil {
+		return nextPlyID, err
 	}
 
-	err = tx.Commit()
-	if err != nil {
-		log.Fatal(err)
-		return err
+	// Same transaction as the rows, so a crash cannot leave processed
+	// disagreeing with what was stored.
+	if _, err := tx.Exec(
+		`UPDATE metadata SET processed = processed + ? WHERE id = ?`,
+		len(games), metadata.Id,
+	); err != nil {
+		return nextPlyID, err
 	}
 
-	return IncrementProcessedBy(metadata.Id, len(games))
+	if err := tx.Commit(); err != nil {
+		return nextPlyID, err
+	}
+
+	return plyID, nil
 }
