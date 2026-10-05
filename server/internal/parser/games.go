@@ -8,11 +8,32 @@ import (
 
 	"server/rest/internal/config"
 	"server/rest/internal/database"
+	"server/rest/internal/download"
 	"server/rest/internal/models"
 	"server/rest/internal/utils"
 
 	"github.com/corentings/chess/v2"
 )
+
+func getNextFile() models.Metadata {
+	nextFile, err := database.GetSmallestUnprocessedFile()
+	if err != nil {
+		log.Fatalf("Failed to get file with least amount of data to process: %s", err)
+	}
+
+	if nextFile.Downloaded {
+		return nextFile
+	}
+
+	nextFile, err = database.GetSmallestUndownloadedFile()
+
+	if err != nil {
+		log.Fatalf("Failed to find the smallest non downloaded/processed file: %s", err)
+	}
+
+	download.FetchGameFile(nextFile)
+	return nextFile
+}
 
 // ProcessFile parses PGNs from the file specified by metadata and inserts the resulting
 // game data into the database while notating progress and corruption issues.
@@ -136,10 +157,7 @@ func EnsureNGamesProcessed(n int) {
 
 	// parse local PGN files until required number of games has been hit
 	for remainingGames > 0 {
-		nextFile, err := database.GetSmallestUnprocessedFile()
-		if err != nil {
-			log.Fatal(err)
-		}
+		nextFile := getNextFile()
 
 		err = ProcessFile(nextFile, nextFile.Processed+remainingGames)
 		if err != nil {

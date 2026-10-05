@@ -53,27 +53,3 @@ func FetchGameFile(metadata models.Metadata) {
 
 	log.Printf("downloaded %s", metadata.Filename)
 }
-
-func EnsureNGamesDownloaded(n int) {
-	downloadedCount, err := database.CountDownloaded()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	for downloadedCount < n {
-		nextFile, err := database.GetSmallestUndownloadedFile()
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		FetchGameFile(nextFile)
-		downloadedCount, err = database.CountDownloaded()
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		log.Printf("downloaded games: %d/%d (%.1f%%)", downloadedCount, n, float64(downloadedCount)/float64(n)*100)
-	}
-
-	log.Printf("finished ensuring %d games downloaded\n", n)
-}
