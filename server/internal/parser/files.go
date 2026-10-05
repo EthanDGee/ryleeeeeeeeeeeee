@@ -39,4 +39,10 @@ func DecompressPGN(metadata models.Metadata) {
 	if _, err := io.Copy(out, decoder); err != nil {
 		log.Fatalf("failed to decompress %s: %v", compressedPath, err)
 	}
+
+	// remove compressed copy after successful decompression
+	err = os.Remove(compressedPath)
+	if err != nil {
+		log.Fatalf("failed to delete %s: %v", compressedPath, err)
+	}
 }

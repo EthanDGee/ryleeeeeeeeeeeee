@@ -18,9 +18,6 @@ func main() {
 
 	download.FetchFilesMetadata()
 
-	log.Printf("ensuring at least %d games are downloaded", config.GAME_COUNT)
-	download.EnsureNGamesDownloaded(config.GAME_COUNT)
-
 	log.Printf("ensuring at least %d games processed", config.GAME_COUNT)
 	parser.EnsureNGamesProcessed(config.GAME_COUNT)
 
