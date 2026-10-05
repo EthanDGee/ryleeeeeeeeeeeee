@@ -57,6 +57,21 @@ func GetAllMetadata() ([]models.Metadata, error) {
 	return results, rows.Err()
 }
 
+func FileProcessed(id int) (bool, error) {
+	db, err := DB()
+	if err != nil {
+		return false, err
+	}
+
+	var games, processed int
+	if err := db.QueryRow(`SELECT games, processed FROM metadata WHERE id = ?`, id).Scan(&games, &processed); err != nil {
+		return false, err
+
+	}
+
+	return processed >= games, nil
+}
+
 func MetadataExists(filename string) (bool, error) {
 	db, err := DB()
 	if err != nil {

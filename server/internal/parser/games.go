@@ -32,7 +32,6 @@ func ProcessFile(metadata models.Metadata, cap int) error {
 	if err != nil {
 		return err
 	}
-	defer utils.Close(file, "file")
 
 	scanner := chess.NewScanner(file)
 
@@ -98,11 +97,26 @@ func ProcessFile(metadata models.Metadata, cap int) error {
 		}
 	}
 
+	utils.Close(file, "file")
+
 	// insert remaining batch entries
 	if len(batch) > 0 {
 		if _, err := database.InsertGames(batch, metadata, nextPlyID); err != nil {
 			log.Printf("failed to insert final batch from %s: %v", metadata.Filename, err)
 			return err
+		}
+	}
+
+	// delete the file if fully processed
+	processed, err := database.FileProcessed(metadata.Id)
+	if err != nil {
+		return err
+	}
+
+	if processed {
+		err = os.Remove(path)
+		if err != nil {
+			log.Fatalf("Unable to delete %s: %s", path, err)
 		}
 	}
 
